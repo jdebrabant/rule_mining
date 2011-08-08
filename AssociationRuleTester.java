@@ -7,8 +7,8 @@ public class AssociationRuleTester
 	BufferedReader rule_file; 
 	BufferedReader data_file; 
 	
-	LinkedList<AssociationRule> rules; 
-	LinkedList< LinkedList<Integer> > partitions; 
+	LinkedList<AssociationRule> rules;   // rules from the rule file
+	LinkedList< LinkedList<Integer> > partitions;  // queries in the log file
 	
 	public static void main(String args[])
 	{
@@ -90,10 +90,10 @@ public class AssociationRuleTester
 				for(int i = 0; i < num_tokens_lhs; i++)
 				{
 					lhs.add(new Integer(Integer.parseInt(tokenizer.nextToken()))); 
-					System.out.print(lhs.get(i) + " "); 
+					//System.out.print(lhs.get(i) + " "); 
 				}
 				
-				System.out.println("---> " + rhs + "\n" + line);
+				// System.out.println("---> " + rhs + "\n" + line);
 				
 				token = tokenizer.nextToken();
 				token = token.substring(1, token.length()-1); // chop off '(' in front and ',' in back
@@ -105,9 +105,9 @@ public class AssociationRuleTester
 				
 				support = Double.parseDouble(token); 
 				
+				// for simplicity (for now) I am only adding rules with 1 conidtion on the lhs
 				if(lhs.size() == 1)
 					rules.add(new AssociationRule(line, lhs, rhs, confidence, support)); 
-				
 			}
 			rule_file.close();
 		}
@@ -145,21 +145,64 @@ public class AssociationRuleTester
 		}
 	}
 	
+	public HashMap<Integer, Integer> predictNextPartitions(LinkedList<Integer> current_query)
+	{
+		//LinkedList<Integer> predicted_partitions = new LinkedList<Integer>();
+		HashMap<Integer, Integer> predicted_partitions = new HashMap<Integer, Integer>();
+		Integer value; 
+		
+		for(int i = 0; i < rules.size(); i++)
+		{
+			if(current_query.contains(rules.get(i).lhs.get(0)))
+			{
+				value = predicted_partitions.get(rules.get(i).rhs); 
+				
+				if(value == null) // this partition hasn't been predicted yet, so add it to hash table
+				{
+					predicted_partitions.put(rules.get(i).rhs, new Integer(1)); 
+				}
+				else  // increment the count of this partition
+				{
+					value++; 
+				}
+				
+				//System.out.println("...predicting partition " + rules.get(i).rhs); 
+			}
+		}
+		return predicted_partitions; 
+	}
+	
 	public void run()
 	{
 		double intersection; 
+		LinkedList<Integer> current_query; 
+		LinkedList<Integer> next_query; 
+		HashMap<Integer, Integer> predicted_partitions; 
 		
-		for(int i = 0; i < partitions.size(); i++) // iterate through each query
+		for(int i = 1; i < partitions.size(); i++) // iterate through each query
 		{
-			for(int j = 0; j < rules.size(); j++)
+			current_query = partitions.get(i-1); 
+			next_query = partitions.get(i); 
+			
+			predicted_partitions = predictNextPartitions(current_query); 
+			
+			System.out.print("next query: "); 
+			for(int j = 0; j < next_query.size(); j++)
 			{
-				intersection = intersectLHS(partitions.get(i), rules.get(j)); 
-				
-				//if(intersection == 1)
-				//	System.out.println("here"); 
-				System.out.println("intersection = " + intersectLHS(partitions.get(i), rules.get(j))); 				
+				System.out.print(next_query.get(j) + " "); 
 			}
-			break; 
+			System.out.println(); 
+			
+			Iterator it = predicted_partitions.entrySet().iterator(); // iterate through the hashmap
+			
+			System.out.print("predicted partitions <partition_id, frequency>: "); 
+			while(it.hasNext())
+			{
+				Map.Entry entry = (Map.Entry)it.next(); 
+				System.out.print("<" + entry.getKey() + ", " + entry.getValue() + "> "); 
+			}
+			System.out.println(); 
+
 		}
 	}
 }
@@ -168,12 +211,12 @@ class AssociationRule
 {
 	String rule; 
 	List<Integer> lhs;
-	int rhs; 
+	Integer rhs; 
 	
 	double confidence; 
 	double support; 
 	
-	public AssociationRule(String rule_, List<Integer> lhs_, int rhs_, double confidence_, double support_)
+	public AssociationRule(String rule_, List<Integer> lhs_, Integer rhs_, double confidence_, double support_)
 	{
 		rule = rule_; 
 		lhs = lhs_; 

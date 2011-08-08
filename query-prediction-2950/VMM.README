@@ -1,0 +1,60 @@
+1. Infrodunction
+
+These packages predicts the next element of the sequence using the variable-order 
+Markov Chain (vMM). It relies on the code of the vmm package of the R. Begleiter, 
+R. El-Yqniv and G. Yona. If you use this package, please cite 
+@ARTICLE{BegleiterEY04,
+  author = {R. Begleiter and R. El-Yaniv and G. Yona},
+  title = {On Prediction Using Variable Order Markov Models},
+  journal = {Journal of Artificial Intelligence Research (JAIR)},
+  year = {2004},
+  volume = {22},
+  pages = {385--421},
+}
+
+Package list:
+    vmm:    Library package that contains actual implementation of the vMM. 
+            Main class - PSTPredictor, which implements Probabilistic Suffix Trees (PST).
+            Please refer to the section 3.5 of the paper for implementation details 
+            of the algorithm.
+    vmmRun: package that contains executable for predicting/self-test verification. 
+            Runs PSTPredictor with given parameters.
+
+
+
+2. Usage
+
+To use the PST in your program, instantiate the PSTPredictor class:
+    PSTPredictor predictor = new PSTPredictor();
+ Initialize it using:
+    predictor.init(abSize, pMin, alpha, gamma, r, vmmOrder);
+ Here abSize, pMin, alpha, gamma, r, vmmOrder are initialization parameters:
+    abSize: Alphabet size for the input sequence. IN other words, this is the number 
+            of unique states in the Markov chain;
+    pMin:   Minimum frequency of the subsequence in the training set, so it will 
+            be added as a separate node into the PST tree
+    alpha:  minimal probability of the next symbol given the sequence, when the 
+            sequence will be present as a distinct node in the PST tree 
+            (minnimal "meanningfullness" of the sequence)
+    gamma:  probability for the unseen symbol - used for normalization
+    r:      minimum information gain for the symbol s', calculated as
+            r=P(next sym|sequence,s')/P(next sym|sequence)
+            when the symbol and the sequence will be presented as a distinct node
+    vmmOrder: maximum order of the Variable Markov Model (vmm)
+ Please see the paper for the detailed description of parameters
+
+To use the library, we created the vmmRun package. To use it to train and predict the data, run:
+
+java -jar <path to the jar>/vmmRun.jar <training sequence> <test sequence> <result file> [MAP|prob] [verify], where
+    <training sequence> - name of the .csv file with the training sequence
+    <test sequence> -name of the .csv file with the testing sequence
+    <result file> - name of the .csv file where result sequence will be saved
+    MAP: MAP will be used for prediction (default). Namely, the resulting state 
+        will be one with the highest probability predicted by the Markov model
+    prob: the resulting state will be generated probabilistically, taking into 
+        account all the probabilities predicted by the Markov model (used for 
+        verification)
+    verify: if specified, the program will print out transition matrices for 
+        1-order MM learned both from training and predicted data, for comparison. 
+        If the package works correctly, these matrices will be very similar 
+        (+/- 5% error allosed)

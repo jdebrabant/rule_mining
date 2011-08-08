@@ -1,0 +1,45 @@
+--- GALAXY README ---
+Justin Ardini (jardini)
+02/22/10
+
+- GALAXY DESIGN -
+
+Fortunately, my Solar design made most of the design decisions for Galaxy easy.  I already had a SolarBodyManager abstract class, so I extended this with a SolarBodyOctreeManager.  All other classes were kept separate from the data type for storing SolarBodies, so they didn't need to change much, if at all.  The most challenging decisions were those about how to implement the Octree in a general way.  To do this, I create an Object3D interface for anything with x, y, and z coordinates, a radius, and a mass.  I used the Composite Pattern for Octrees, so that each node can be treated like any other Object3D.  This makes the design simpler and more general because the Physics code can take in any two Object3Ds for all basic calculations.
+
+There were a few design tradeoffs I had to make in order to speed up my implementation of an Octree.  Upon profiling my project, there was a bottleneck in calling the "treeForce" method of an octree.  To fix this, I had to give the net force method in Physics a distance parameter, as otherwise I was repeating a distance calculation in finding forces, which caused a major slowdown.  Additionally, I avoided vectors in net force, as using coordinates directly caused a small speed-up for a method repeated many times.  The result of these tradeoffs is that a few of the parameters for methods are unnecessary or uninintuitive, at least for calculating forces.  Another design tradeoff was that of making a single Octree class, rather than a tree and a node.  I found this simpler, because all the methods had easy access to all inner fields and they were all located in one place, however the tradeoff is that the Octree class is rather large.
+
+- SOLAR DESIGN -
+
+Here is my overview of design from Solar, these decisions worked out well for extending the project to create Galaxy.  The only existing class I needed to change much was the Physics class, which needed to work with any Object3D instead of just SolarBodies.
+
+"SolarMain provides an entry point for the simulation and handles interfacing with SolarDraw.Control.  The simulation information is stored within two classes contained in the main: the time information is in a SolarTimeInfo instance, while the Solar Bodies are contained in a SolarBodyManager instance.  The time information and solar body management is separated because the solar body manager implementation is likely to change, while the time information is not.  The reason that the time information is not simply contained in variables in SolarMain is to prevent passing the entire SolarMain to SolarXML when inputting/outputting XML.  Instead, it is safer and more convenient to pass the time information and body manager to the XML read/write methods.
+
+The main loop simply calls tick() for a SolarBodyManager instance and a SolarDraw instance, to keep the code involved in SolarMain to a minimum.  The SolarBodyManager instance takes care of telling the SolarBodies to update themself and then handles collisions.  SolarBodyManager is abstract so that each subclass may contain a different implementation for the type of collection used to hold SolarBodies and for the algorithms used in updates and collisions.  SolarBodyManager is not an interface because it contains a Factory method for creating SolarBodies, as well as a basic tick() method The attempt to create an interface for a collection of SolarBodies separate from the updating and collision handling code did not make as much sense in this situation because the motivation for a new type of collection in Solar is to improve the speed of the simulation.  This is usually done by also updated the collision and updating code to utilize the new type of collection.  Note that the physics behind handling collisions and forces is abstracted out in a SolarPhysics class, so that different implementation of SolarBodyManagers can reuse the same code.
+
+There are a few tradeoffs with the design as it stands.  SolarMain and SolarBodyListManager share an instance of solarDraw, and if the manager called solarDraw.tick() or the main unregistered a SolarBody, there would be big problems.  It would be ideal to have one class take care of all of the interfacing with solarDraw, however I found no way of accomplishing this without destroying the abstraction layer I created by separating the main from the manager.  Another tricky design decision was that of putting all the XML code in one static class.  Initially, my design had toXML() methods contained within most classes so that each class handles its own XML representation.  This worked fine, with the caveat that I relied in many places upon the dom4j imports.  If I decided at a later point to switch to a new XML library, or a new file format altogether, I could not easily do so.  Thus, I created the current design that abstracts out all the XML handling in one class."
+
+- CLASS OVERVIEWS -
+
+See the javadocs for basic descriptions of all classes and methods.
+
+See classDiagram.pdf for a complete (poorly-drawn) class diagram.
+
+- RUNNING THE SIMULATION -
+
+The simulation is run by running SolarMain with command line tags {[(-i) or (-p and/or -r and/or -t)] and optionally (-o)}.  When the -i tag is used, the -p, -r, and -t tags are ignored.  When -i is not used, -p, -r, and -t are either set to the given values or are set to default values.  The default value for -p and -r is 100 and the default value for -t is 100000.  These can be changed in the main of GalaxyMain.  If no output file is specified, the results are saved at the end of the simulation to default.xml.
+
+When inputting an XML file, all attributes should have some value.  If, for example, no timestep attribute is included, the program will return an error.  The same goes for X, Y and Z coordinates.  Only positive masses are accepted, and only non-negative radii are accepted.  Note that you can input no position, no velocity, or no thrust and these will be set to [0, 0, 0] by default.
+
+I added a couple new constants to SolarConstants, such as a minimum and maximum default z coordinate, and a min and max default distance.  To change the Octree data structure, simply change the constants in OctreeConstants.
+
+- TESTING -
+
+The main challenge in creating tests for Galaxy was actually checking the internal representation of Octrees.  I accomplished this reasonably well by creating a set of methods used for testing only.  These methods include getCenter(), getItems(), and containingNode().  containingNode() was especially important, as it gave me a way of inserting a bunch of items into an Octree and ensuring that each item was at a leaf, and that each item was in the correct leaf.  By combining this with getItems(), I created tests that checked that all items were inserted, and that they were inserted into the correct leaf.  I used getCenter() to ensure that upon creating children nodes, the center was correctly set, using the side length of the parent node.
+
+Using the test methods I created in the Octree class, I created a set of unit tests for my Octree.  Once these were up and running, I ran my unit tests from Solar on the simple physics and vector calculations, then used these to test the representation of SolarBodies and their internal methods.  Once I thouroughly tested the internal representation of SolarBodies, I checked the XML reader and made sure the resulting internal representation was correct.  After doing these, I proceeded to check the more complicated code, including updating and colliding bodies.
+
+I then tried combining my XML reader and writer, reading in a file then writing the result, and repeating to make sure the representation is maintained.  I also used diff to ensure that nothing changed, and tested the order of arguments and made sure it did not cause problems for the input.
+
+Finally, I ran many system tests, including rings of planets and rockets, random simulations, and many invaild XML files for error checking.  I documented these results and made sure that my simulation ran faster than the demo for any number of objects > 50.
+
+Note: I collaborated on creating test XML input files with Paul Kernfeld.

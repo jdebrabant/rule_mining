@@ -1,0 +1,5 @@
+   These are programs we can use to test query prediction framework
+   They simulate gravitational interaction of bodies (planets, rockets) for the 
+given number of timesteps. Each body is represented as an object, so the more bodies
+you have, more objects you are creating.
+Internally, solar is simple than the Galaxy. To run either program, use run.sh script

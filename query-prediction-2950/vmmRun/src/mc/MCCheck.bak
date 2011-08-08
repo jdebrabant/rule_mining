@@ -1,0 +1,302 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package mc;
+
+import vmm.*;
+import java.util.*;
+
+/**
+ *
+ * @author iscander
+ */
+public class MCCheck {
+
+    //Class that generates a multinomial distribution - used for verification
+    class Multinom
+    {
+        Random rnd;
+        public ArrayList<Double> arrCumProbabilities;
+
+        public Multinom()
+        {
+            rnd = new Random();
+            arrCumProbabilities = new ArrayList<Double>();
+        }
+
+        //Set array of probabilities for each class
+        public void setProbabilities(ArrayList<Double> arrProbabilities)
+        {
+            arrCumProbabilities.clear();
+            arrCumProbabilities.add(arrProbabilities.get(0));
+            for (int i=1; i<arrProbabilities.size(); i++)
+            {
+                arrCumProbabilities.add(arrCumProbabilities.get(i-1)+arrProbabilities.get(i));
+            }
+        }
+
+        //Generate a random number from the multinomial distribution
+        //according to the probabilities being set earlier
+        public int generate()
+        {
+            double rndNext = rnd.nextDouble();
+            for (int i=0; i<arrCumProbabilities.size(); i++)
+            {
+                if (rndNext < arrCumProbabilities.get(i))
+                    return i;
+            }
+            return -1;
+        }
+    }
+
+
+    //
+    //Datasets used for training/testing/verification
+    //
+    //Array where the training set is loaded (up to now we assume one sequence in the
+    //training set)
+    public ArrayList<Integer> trainSeq;
+    //Array where the test set is loaded (we assume a single sequence per set)
+    public ArrayList<Integer> testSeq;
+    //Prediction
+    public ArrayList<Integer> predictSeq;
+
+    //
+    //PST prediction data
+    //
+    //PST tree object (variable-order Markov network)
+    PSTPredictor predictor;
+
+    //Parameters of the PST tree
+    //Alphabet size for the input sequence (number of unique characters)
+    int m_iAlphabetSize=4;
+    //Minimum frequency of the subsequence in the training set
+    double m_dblSubsequenceMinFreq = 0.001;
+    //minimal pprobability of the next sym given the sequence, when the
+    //sequence will be presented as a distinct node in the PST tree (min "meanningfullness" of the sequence)
+    double alpha = 0.01;
+
+    //probability for the unseen symbol - for normalization
+    double gamma = 0.001;
+    
+    //minimum information gain for the symbol s': P(next sym|sequence,s')/P(next sym|sequence)
+    //when the symbol and the sequence will be presented as a distinct node
+    double r = 1.05;
+
+    //maximum order of the Variable Markov Model (vmm)
+    int m_iVMMOrder = 5;
+
+    //Prediction: generate the predicted value according to the MAP principle
+    boolean m_bPredictMAP;
+    //Prediction: generate the predicted value randomly from the distribution
+    //given by the PST tree
+    boolean m_bPredictRandom;
+
+    //
+    //Verification parameters
+    //
+    Multinom multinom;
+    //Transition matrix obtained from the training set
+    public double transmat_train[][];
+    //Transition matrix obtained from the verification set
+    public double transmat_verify[][];
+
+
+    MCCheck()
+    {
+        trainSeq = new ArrayList<Integer>();
+        testSeq = new ArrayList<Integer>();
+        predictSeq = new ArrayList<Integer>();
+        multinom = new Multinom();
+    }
+
+    //Initialize the PST
+    void initialize()
+    {
+        predictor = new PSTPredictor();
+        predictor.init(m_iAlphabetSize, m_dblSubsequenceMinFreq, alpha, gamma, r, m_iVMMOrder);
+    }
+
+    //Train the PST using the input sequence
+    void train()
+    {
+        predictor.learn(trainSeq);
+        System.out.println("Training complete");
+    }
+
+    //Predict data for the test sequence. Prediction results will be placed to the predictSeq array
+    //Se are doing MAP predictSeq, i.e. outputting the element which has the highest probability
+    //predicted by the Markov model
+    void predict()
+    {
+        ArrayList<Double> arrProbs = new ArrayList<Double>();
+        for (int i=1; i<testSeq.size(); i++)
+        {   //Loop through the input sequence and get the last m_iVMMOrder numbers from it
+            List<Integer> context;
+            if (i<m_iVMMOrder)
+            {   //We are at the beginning of the sequence, so get first i<m_iVMMOrder elements
+                context = testSeq.subList(0, i);
+            }else
+            {
+                context = testSeq.subList(i-m_iVMMOrder, i);
+            }
+
+            if (m_bPredictMAP)
+            {   //Do the MAP prediction: generate that state that has the
+                //highest probability according to the PST
+                double dblMax = 0;
+                int chrToAppend = 0;
+                //Calculate the probability of j-th output using the tree
+                for (int j=0; j<m_iAlphabetSize; j++)
+                {
+                    double p = predictor.predict(j, context);
+                    if (p > dblMax)
+                    {
+                        chrToAppend = j;
+                        dblMax = p;
+                    }
+                }
+                predictSeq.add(chrToAppend);
+            }
+
+            if (m_bPredictRandom)
+            {   //Generate predicted values randomly according to the
+                //distribution given by the PST
+                arrProbs.clear();
+                for (int j=0; j<m_iAlphabetSize; j++)
+                {
+                    double p = predictor.predict(j, context);
+                    arrProbs.add(p);
+                }
+                multinom.setProbabilities(arrProbs);
+                int iNewNum = multinom.generate();
+                predictSeq.add(iNewNum);
+            }
+        }
+    }
+
+    //The method buids a 1st order Markiv model transition matrix from the data
+    //Parameters:
+    //  transmat:   the matrix to be built
+    //  doVerify:   if true, then source state is taken from the training sequence,
+    //              destination state - from the predicted sequence (transition matrix
+    //              built for the predicted data)
+    //              if false, than source and destination states are taken from the
+    //              training sequence (transition matrix built using training data)
+    public void build1MM(double transmat[][], boolean doVerify)
+    {
+        for (int i=0; i<m_iAlphabetSize; i++)
+            for (int j=0; j<m_iAlphabetSize; j++)
+                transmat[i][j] = 0.0;
+
+
+        for (int i=0; i<predictSeq.size()-1; i++)
+        {
+            int iNext = -1;
+            int iCurrent = -1;
+
+            if (doVerify)
+                iCurrent = testSeq.get(i);
+            else
+                iCurrent = trainSeq.get(i);
+            if (doVerify)
+                iNext = predictSeq.get(i);
+            else
+                iNext = trainSeq.get(i+1);
+            
+            transmat[iCurrent][iNext] += 1;
+        }
+
+        for (int i=0; i<m_iAlphabetSize; i++)
+        {
+            double sum = 0;
+            for (int j=0; j<m_iAlphabetSize; j++)
+                sum+=transmat[i][j];
+
+            for (int j=0; j<m_iAlphabetSize; j++)
+                transmat[i][j] /= sum;
+        }
+
+        for (int i=0; i<m_iAlphabetSize; i++)
+        {
+            for (int j=0; j<m_iAlphabetSize; j++)
+            {
+                System.out.format("%3f\t", transmat[i][j]);
+            }
+            System.out.println();
+        }
+    }
+
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+
+        if (args.length < 3)
+        {
+            System.out.println("Input arguments: <training sequence> <test sequence> <predicted sequence> [MAP|prob] [verify]");
+            System.out.println("<training sequence>: name of the .csv file with the training sequence");
+            System.out.println("<test sequence>: name of the .csv file with the testing sequence");
+            System.out.println("<predicted sequence>: name of the .csv file where predicted sequence will be saved");
+            System.out.println("MAP: MAP will be used for prediction. Namely, the resulting state will be one with the highest probability predicted by the Markov model (default)");
+            System.out.println("prob: the resulting state will be generated probabilistically, taking into account all the probabilities predicted by the Markov model (used for verification)");
+            System.out.println("verify: if specified, the program will print out transition matrices for 1-order MM learned both from training and predicted data, for comparison");
+            System.exit(-1);
+        }
+        //Create and initialize the Markov network
+        MCCheck vmmPredictor = new MCCheck();
+        vmmPredictor.initialize();
+
+        System.out.println("Reading the training set");
+        FileUtil.ReadFromFile(args[0], vmmPredictor.trainSeq);
+        System.out.println("Reading the test set");
+        FileUtil.ReadFromFile(args[1], vmmPredictor.testSeq);
+
+        System.out.println("Training the model");
+        vmmPredictor.train();
+
+        vmmPredictor.m_bPredictMAP = true;
+        if ((args.length >= 4)&&(args[3].equals("prob")))
+        {
+            vmmPredictor.m_bPredictMAP = false;
+            vmmPredictor.m_bPredictRandom = true;
+        }
+        System.out.println("Doing the prediction");
+        vmmPredictor.predict();
+        FileUtil.WriteToFile(args[2], vmmPredictor.predictSeq);
+
+        if ((args.length == 5)&&(args[4].equals("verify")))
+        {   //Do verification
+            vmmPredictor.transmat_train = new double[vmmPredictor.m_iAlphabetSize][vmmPredictor.m_iAlphabetSize];
+            vmmPredictor.transmat_verify = new double[vmmPredictor.m_iAlphabetSize][vmmPredictor.m_iAlphabetSize];
+
+            System.out.println("Transition matrix calculated from training sequence");
+            vmmPredictor.build1MM(vmmPredictor.transmat_train, true);
+            System.out.println();
+            System.out.println("Transition matrix, calculated from our prediction");
+            vmmPredictor.build1MM(vmmPredictor.transmat_verify, false);
+
+            System.out.println();
+            System.out.println("Comparing matrices");
+            double maxDt = 0;
+            double avgDt = 0;
+            
+            for (int i=0; i<vmmPredictor.m_iAlphabetSize; i++)
+            {
+                for (int j=0; j<vmmPredictor.m_iAlphabetSize; j++)
+                {
+                    double dt = Math.abs(vmmPredictor.transmat_train[i][j] - vmmPredictor.transmat_verify[i][j]);
+                    if (dt > maxDt)
+                        maxDt = dt;
+                    avgDt += dt;
+                }
+            }
+
+            System.out.format("Maximum error: %f, average error:%f\n", maxDt, avgDt/(vmmPredictor.m_iAlphabetSize*vmmPredictor.m_iAlphabetSize));
+        }
+    }
+
+}

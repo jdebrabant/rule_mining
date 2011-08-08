@@ -1,0 +1,135 @@
+
+Query prediction project
+
+0. Preface
+
+This package contains code for the query prediction, which includes prediction 
+of query type (template) and query parameters. Predicting the query type is done 
+using the variable-order Markov Chain (vMM). 
+
+1. Infrodunction
+
+These packages predicts the next element of the sequence using the variable-order 
+Markov Chain (vMM). It relies on the code of the vmm package of the R. Begleiter, 
+R. El-Yqniv and G. Yona. If you use this package, please cite 
+@ARTICLE{BegleiterEY04,
+  author = {R. Begleiter and R. El-Yaniv and G. Yona},
+  title = {On Prediction Using Variable Order Markov Models},
+  journal = {Journal of Artificial Intelligence Research (JAIR)},
+  year = {2004},
+  volume = {22},
+  pages = {385--421},
+}
+
+Package list:
+
+    MC_generate: a simple Python program used to generate sequences for the
+            testing of the vMM.
+
+    vmm:    Library package that contains actual implementation of the vMM (used 
+            for predicting the next query type). 
+            Main class - PSTPredictor, which implements Probabilistic Suffix Trees (PST).
+            Please refer to the section 3.5 of the paper for implementation details 
+            of the algorithm.
+
+    vmmRun: package that contains executable for query type predicton and 
+            self-test verification. Runs PSTPredictor with given parameters.
+
+    ParamMiner: program for predicting query parameters. Includes capabilities to
+            prepare training data (patterns) from the set of raw queries and do 
+            prediction using association rules mined by the Weka.
+
+    QueryProcessing: the library used by the ParamMiner and vmmRun. Contains classes 
+            for manipulating the input sequence of queries. vmmRun uses it to read
+            queries and generate the sequence of query templates (numbers). 
+            ParamMiner uses it to get the sequence of data patterns (parameter
+            values).
+
+2. Usage
+
+There are, in fact, two separate pieces of functionality here:
+ - model for predicting what would be the next query ID (vMM-based model)
+ - model for predicting parameter values for the current query (based on 
+association rules). This model assumes that we already know what is the 
+"current" query (probably it is one predicted by the vMM based model).
+
+2.1. Predictng the next query ID
+
+vMM model is implemented using the the probabilistic suffix tree.
+
+To use the PST in your program, instantiate the PSTPredictor class:
+    PSTPredictor predictor = new PSTPredictor();
+ Initialize it using:
+    predictor.init(abSize, pMin, alpha, gamma, r, vmmOrder);
+ Here abSize, pMin, alpha, gamma, r, vmmOrder are initialization parameters:
+    abSize: Alphabet size for the input sequence. IN other words, this is the number 
+            of unique states in the Markov chain;
+    pMin:   Minimum frequency of the subsequence in the training set, so it will 
+            be added as a separate node into the PST tree
+    alpha:  minimal probability of the next symbol given the sequence, when the 
+            sequence will be present as a distinct node in the PST tree 
+            (minnimal "meanningfullness" of the sequence)
+    gamma:  probability for the unseen symbol - used for normalization
+    r:      minimum information gain for the symbol s', calculated as
+            r=P(next sym|sequence,s')/P(next sym|sequence)
+            when the symbol and the sequence will be presented as a distinct node
+    vmmOrder: maximum order of the Variable Markov Model (vmm)
+ Please see the paper for the detailed description of parameters
+
+To demonstrate how the library can be used, we created the vmmRun package. To 
+use it to train and predict the data, run:
+
+java -jar <path to the jar>/vmmRun.jar <training sequence> <test sequence> <result file> [MAP|prob] [verify], where
+    <training sequence> - name of the .csv file with the training sequence
+    <test sequence> -name of the .csv file with the testing sequence
+    <result file> - name of the .csv file where result sequence will be saved
+    MAP: MAP will be used for prediction (default). Namely, the resulting state 
+        will be one with the highest probability predicted by the Markov model
+    prob: the resulting state will be generated probabilistically, taking into 
+        account all the probabilities predicted by the Markov model (used for 
+        verification)
+    verify: if specified, the program will print out transition matrices for 
+        1-order MM learned both from training and predicted data, for comparison. 
+        If the package works correctly, these matrices will be very similar 
+        (+/- 5% error allosed)
+
+2.2. Predicting the parameter of the next query
+
+This model is implemented using association rules. The usage is as following:
+- use the ParamMiner to prepare tesitng data (patterns) for the Weka;
+- use the Weka to learn association rules;
+- modify the code of the ParamMiner to implement rules;
+- use the ParamMiner to predict the values of parameters for each query.
+
+Using ParamMiner:
+java -jar <path to ParamMiner.jar> action <action to be taken> fileIn <list of 
+input files> fileOut <output file name> depth <num. queries to look back>
+
+If action == mineAssoc, than ParamMiner would prepare input patterns to be used 
+with Weka. Patterns are prepared in form (see solar.assoc_1.csv in the data folder):
+Q(t-depth),...,Q(t-1),Q(t),paramIdx,antecedent, 
+e.g.
+"Q2","Q3","Q4","Q1","Q2","P0","P(t-4;0)"
+
+Here Q2, Q3, Q4, Q1 are IDs of the 4 previous queries (Q(t-5), ..., Q(t-1));
+Q1 is the ID of the current query;
+P0 is the 0-based index of the current parameter in the current query we are 
+deriving pattern for;
+P(t-4, 0) is the actual pattern. It denotes that the current parameter is the same 
+as the 0-th parameter of the query Q(t-4).
+
+When mining rules with Weka, we recommend using the regular Apriori algorithm
+in the "car" mode (mining class association rules). The class index should be set
+to 7 (index of the antecedent) and the max number of rules should be sufficiently
+large (e.g. 100-1000).
+
+The rule filtering algorithm described in the report should be applied to filter
+out the relevant rules.
+
+Once rules are mined, they must be hardcoded into the lines 300-310 of ParamMiner
+class (use Rule constructor). Each rule predicts the value of the given parameter 
+for the given query ID and the list of given previous queries.
+
+Once all rules are hardcoded, run the ParamMiner with the action=predict to predict
+values of parameters for the given set of queries (verification set). The ParamMiner 
+will report the accuracy of prediction.

@@ -1,0 +1,33 @@
+--- SOLAR README ---
+Justin Ardini (jardini)
+02/10/10
+
+- DESIGN DECISIONS -
+
+SolarMain provides an entry point for the simulation and handles interfacing with SolarDraw.Control.  The simulation information is stored within two classes contained in the main: the time information is in a SolarTimeInfo instance, while the Solar Bodies are contained in a SolarBodyManager instance.  The time information and solar body management is separated because the solar body manager implementation is likely to change, while the time information is not.  The reason that the time information is not simply contained in variables in SolarMain is to prevent passing the entire SolarMain to SolarXML when inputting/outputting XML.  Instead, it is safer and more convenient to pass the time information and body manager to the XML read/write methods.
+
+The main loop simply calls tick() for a SolarBodyManager instance and a SolarDraw instance, to keep the code involved in SolarMain to a minimum.  The SolarBodyManager instance takes care of telling the SolarBodies to update themself and then handles collisions.  SolarBodyManager is abstract so that each subclass may contain a different implementation for the type of collection used to hold SolarBodies and for the algorithms used in updates and collisions.  SolarBodyManager is not an interface because it contains a Factory method for creating SolarBodies, as well as a basic tick() method The attempt to create an interface for a collection of SolarBodies separate from the updating and collision handling code did not make as much sense in this situation because the motivation for a new type of collection in Solar is to improve the speed of the simulation.  This is usually done by also updated the collision and updating code to utilize the new type of collection.  Note that the physics behind handling collisions and forces is abstracted out in a SolarPhysics class, so that different implementation of SolarBodyManagers can reuse the same code.
+
+There are a few tradeoffs with the design as it stands.  SolarMain and SolarBodyListManager share an instance of solarDraw, and if the manager called solarDraw.tick() or the main unregistered a SolarBody, there would be big problems.  It would be ideal to have one class take care of all of the interfacing with solarDraw, however I found no way of accomplishing this without destroying the abstraction layer I created by separating the main from the manager.  Another tricky design decision was that of putting all the XML code in one static class.  Initially, my design had toXML() methods contained within most classes so that each class handles its own XML representation.  This worked fine, with the caveat that I relied in many places upon the dom4j imports.  If I decided at a later point to switch to a new XML library, or a new file format altogether, I could not easily do so.  Thus, I created the current design that abstracts out all the XML handling in one class.
+
+- CLASS OVERVIEWS -
+
+See the javadocs for basic descriptions of all classes and methods.
+
+See classDiagram.pdf for a simple (poorly-drawn) class diagram.
+
+- RUNNING THE SIMULATION -
+
+The simulation is run by running SolarMain with command line tags {[(-i) or (-p and -t)] and optionally (-o)}.  When the -i tag is used, the -p and -t tags are ignored.  When -i is not used, -p and -t are either set to the given values or are set to default values.  The default value for -p is 100 and the default value for -t is 100000.  If no output file is specified, the results are saved at the end of the simulation to default.xml.
+
+When inputting an XML file, all attributes should have some value.  If, for example, no timestep attribute is included, the program will return an error.  The same goes for X, Y and Z coordinates.  Only positive masses are accepted, and only non-negative radii are accepted.  Note that you can input no position, no velocity, or no thrust and these will be set to 0.
+
+- TESTING -
+
+I first did unit tests on the simple physics and vector calculations, then used these to test the representation of SolarBodies and their internal methods.  Once I thouroughly tested the internal representation of SolarBodies, I checked the XML reader and made sure the resulting internal representation was correct.  After doing these, I proceeded to check the more complicated code, including updating and colliding bodies.
+
+I then tried combining my XML reader and writer, reading in a file then writing the result, and repeating to make sure the representation is maintained.  I also used diff to ensure that nothing changed, and tested the order of arguments and made sure it did not cause problems for the input.
+
+Finally, I ran many system tests, including rings of planets and rockets, random simulations, and many invaild XML files for error checking.
+
+Note: I collaborated on creating XML input files with Paul Kernfeld.

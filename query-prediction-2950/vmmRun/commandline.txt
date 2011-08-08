@@ -1,0 +1,11 @@
+--fileTrain ../data/solar1_1.log,../data/solar1_2.log,../data/solar1_3.log --fileTest ../data/solar1_4.log --fileOut ../data/solar.result_query_1.csv
+Accuracy: 1.0
+
+--fileTrain ../data/solar1_2.log,../data/solar1_3.log,../data/solar1_4.log --fileTest ../data/solar1_1.log --fileOut ../data/solar.result_query_2.csv
+Accuracy: 1.0
+
+--fileTrain ../data/solar1_3.log,../data/solar1_4.log,../data/solar1_1.log --fileTest ../data/solar1_2.log --fileOut ../data/solar.result_query_3.csv
+Accuracy: 1.0
+
+--fileTrain ../data/solar1_4.log,../data/solar1_1.log,../data/solar1_2.log --fileTest ../data/solar1_3.log --fileOut ../data/solar.result_query_4.csv
+Accuracy: 1.0

@@ -163,7 +163,7 @@ public class AssociationRuleTester
 				}
 				else  // increment the count of this partition
 				{
-					value++; 
+					predicted_partitions.put(rules.get(i).rhs,++value); 
 				}
 				
 				//System.out.println("...predicting partition " + rules.get(i).rhs); 
@@ -189,7 +189,12 @@ public class AssociationRuleTester
 			System.out.print("next query: "); 
 			for(int j = 0; j < next_query.size(); j++)
 			{
-				System.out.print(next_query.get(j) + " "); 
+			    int x = next_query.get(j);
+			    System.out.print(x + " "); 
+		            if(predicted_partitions.containsKey(x))
+                            {
+                             predicted++;
+                            }
 			}
 			System.out.println(); 
 			
@@ -202,7 +207,7 @@ public class AssociationRuleTester
 				System.out.print("<" + entry.getKey() + ", " + entry.getValue() + "> "); 
 			}
 			System.out.println(); 
-
+                        System.out.println("Correctly predicted: " + predicted/next_query.size() * 100 + "%");
 		}
 	}
 }

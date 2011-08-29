@@ -38,13 +38,20 @@ public class TimeseriesTaskSimulator
         private double y_new;
         private int delta_x_new;
         private double delta_y_new;
+		
+		private int transaction_id; 
+		private int customer_id; 
+		private int customer_transaction_count; 
 
          public QueryBox(int x_, int deltax,  double y_,double deltay)
         {
             x = x_;           
             y = y_;          
             delta_x = deltax;         
-            delta_y = deltay;           
+            delta_y = deltay; 
+			transaction_id = 0; 
+			customer_id = 0; 
+			customer_transaction_count = 0; 
         }
 
         public void scatter()
@@ -63,7 +70,18 @@ public class TimeseriesTaskSimulator
 
         public String checkPartitions()
         {
-			String toReturn = "";  
+			String toReturn = "1 " + transaction_id + " ";
+			
+			transaction_id++; 
+			customer_transaction_count++; 
+			
+			if(customer_transaction_count == 50)
+			{
+				customer_transaction_count = 0; 
+				customer_id++;
+			}
+				
+			
 			int true_count = 0; 
 			try 
 			{
@@ -86,6 +104,10 @@ public class TimeseriesTaskSimulator
 				{
 					toReturn += "\n"; 
 					//apriori_out.write("\n"); 
+				}
+				else
+				{
+					toReturn = ""; 
 				}
 				
 			}

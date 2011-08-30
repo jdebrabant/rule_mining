@@ -70,7 +70,9 @@ public class TimeseriesTaskSimulator
 
         public String checkPartitions()
         {
-			String toReturn = "1 " + transaction_id + " ";
+			//String toReturn = "1 " + transaction_id + " ";
+			
+			String toReturn = ""; 
 			
 			transaction_id++; 
 			customer_transaction_count++; 
@@ -100,9 +102,11 @@ public class TimeseriesTaskSimulator
 					//	toReturn += ",FALSE";
 				}
 				
+				
 				if(true_count > 0)
 				{
-					toReturn += "\n"; 
+					toReturn += "-1 "; 
+					//toReturn += "\n"; 
 					//apriori_out.write("\n"); 
 				}
 				else
@@ -279,35 +283,52 @@ public class TimeseriesTaskSimulator
 
     public void writer(List<QueryBox> boxList, int task)
     {
-        for(int i = 0; i < 1000; i++)
-        {
-            for(QueryBox box: boxList)
-            {
-                box.scatter();
-                try
-                {
-                    switch(task)
-                    {
-                    case 1:                       
-                        //System.out.println(box.checkPartitions());
-                        out1.write(box.checkPartitions());
-                        break;
-                    case 2:
-                        out2.write(box.checkPartitions());
-                        break;
-                    case 3:
-                        out3.write(box.checkPartitions());
-                        break;
-                    default:
-                        System.out.println("Error!!!!");
-                    }
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e.getMessage()); 
-                }
-            }
-        }
+		try
+		{
+			for(int i = 0; i < 25; i++)
+			{
+				for(QueryBox box: boxList)
+				{
+					box.scatter();
+				   
+						switch(task)
+						{
+						case 1:                       
+							//System.out.println(box.checkPartitions());
+							out1.write(box.checkPartitions());
+							break;
+						case 2:
+							out2.write(box.checkPartitions());
+							break;
+						case 3:
+							out3.write(box.checkPartitions());
+							break;
+						default:
+							System.out.println("Error!!!!");
+						}
+				  
+				}
+				
+				switch(task)
+				{
+					case 1:                       
+						out1.write("-2\n"); 
+						break;
+					case 2:
+						out2.write("-2\n"); 
+						break;
+					case 3:
+						out3.write("-2\n"); 
+						break;
+					default:
+						System.out.println("Error!!!!");
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage()); 
+		}
     }
 
     public void runTask1() //3 non-contigous boxes, upward trend

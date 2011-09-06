@@ -336,10 +336,10 @@ public class TimeseriesTaskSimulator
         LinkedList<QueryBox> boxList = new LinkedList <QueryBox>();
         QueryBox box1 = new QueryBox(18000, 28800, 25, 50); //5  to 8 AM
         QueryBox box2 = new QueryBox(39600, 50400, 100, 50); //11AM to 2PM
-        QueryBox box3 = new QueryBox(61200, 72000, 175, 50); // 5 PM to 8PM
+        //QueryBox box3 = new QueryBox(61200, 72000, 175, 50); // 5 PM to 8PM
         boxList.add(box1);
         boxList.add(box2);
-        boxList.add(box3);
+        //boxList.add(box3);
 
         writer(boxList, 1);
     }

@@ -19,7 +19,7 @@ public class SequentialRuleTester
         tester.readRuleFile(args[0]); 
         tester.readLogFile(args[1]);
 		
-        //tester.run(); 
+        tester.run(); 
 	}
 	
 	public SequentialRuleTester()
@@ -34,6 +34,93 @@ public class SequentialRuleTester
             System.out.println(e.getMessage()); 
         }
     }
+	
+	public void run()
+	{
+		LinkedList<Integer> current_query; 
+		LinkedList<Integer> next_query; 
+		LinkedList< LinkedList<Integer> > prediction;
+		LinkedList<Double> prediction_support; 
+		
+		double prediction_accuracy; 
+		int intersection_count; 
+				
+		for(int i = 1; i < queries.size(); i++)
+		{
+			prediction = new LinkedList< LinkedList<Integer> >(); 
+			prediction_support = new LinkedList<Double>(); 
+			
+			current_query = queries.get(i-1); 
+			next_query = queries.get(i); 
+			
+			//prediction = predictNextParititions(current_query); 
+			
+			predictNextParititions(current_query, prediction, prediction_support); 
+			
+			System.out.println("num predictions: " + prediction.size()); 
+			
+			intersection_count = 0; 
+			prediction_accuracy = 0; 
+			for(int j = 0; j < prediction.size(); j++)
+			{
+				if(next_query.contains(prediction.get(j)))
+					intersection_count++; 
+			}
+			prediction_accuracy = intersection_count / (double)prediction.size(); 
+			
+			System.out.print("next query: "); 
+			for(int j = 0; j < next_query.size(); j++)
+			{
+				System.out.print(next_query.get(j) + " "); 
+			}
+			System.out.println(); 
+			
+			System.out.print("predicted: "); 
+			for(int j = 0; j < prediction.size(); j++)
+			{
+				System.out.println("  " + prediction.get(j) + ", support = " + prediction_support.get(j)); 
+			}
+			System.out.println("(" +  intersection_count + "/" + next_query.size() + " partitions predicted, " + 
+							    (prediction_accuracy * 100) + "% accuracy)\n"); 
+		}
+	}
+	
+	public void predictNextParititions(LinkedList<Integer> current_partitions, 
+									   LinkedList< LinkedList<Integer> > predicted_partitions, 
+									   LinkedList<Double> supports)
+	{
+		//LinkedList<Integer> predicted_partitions = new LinkedList<Integer>(); 
+		int highest_supports_rule = 0; 
+		//double max_conf = 0;
+		
+		int num_predictions_added = 0; 
+		boolean added;
+		
+		for(int i = 0; i < rules.size(); i++)
+		{
+			if(rules.get(i).lhs.containsAll(current_partitions))
+			{
+				added = false; 
+				// insert predicted partitions and support into list by sorted by support value
+				for(int j = 0; j < supports.size(); j++)
+				{
+					if(supports.get(j) < rules.get(i).support)
+					{
+						predicted_partitions.add(j, rules.get(i).rhs);			// add predicted partitions 
+						supports.add(j, new Double(rules.get(i).support));	// add support 
+						added = true; 
+						break; 
+					}
+				}
+				
+				if(!added)  // add to the ends of the lists
+				{
+					predicted_partitions.add(rules.get(i).rhs); 
+					supports.add(new Double(rules.get(i).support)); 
+				}
+			}
+		}
+	}
 	
 	public void readLogFile(String filename)
 	{		
@@ -71,7 +158,6 @@ public class SequentialRuleTester
         {
             System.out.println(e.getMessage()); 
         }
-		
 		
 	}
 	

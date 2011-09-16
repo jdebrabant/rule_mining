@@ -1,14 +1,23 @@
+/***************************************************************************************************
+ * File: SequenceCleaner.java
+ * Authors: Justin A. DeBrabant (debrabant@cs.brown.edu)
+ * Description: 
+***************************************************************************************************/ 
+
+
 import java.util.*; 
 import java.io.*; 
 
-public class sequenceCleaner
+public class SequenceCleaner
 {
-	public sequenceCleaner()
+	LinkedList<AssociationRule> rules;
+	
+	public SequenceCleaner()
 	{
-		//rules = new LinkedList<Rule>(); 
+		rules = new LinkedList<AssociationRule>(); 
 	}
-
-	public static void main(String [] args)
+	
+	public void createRules(String sequence_file)
 	{
 		StringTokenizer tokenizer; 
 		String token; 
@@ -18,11 +27,9 @@ public class sequenceCleaner
 		int num_rules_read = 0; 
 		int num_rules_after_cleaning; 
 		
-		LinkedList<Rule> rules = new LinkedList<Rule>(); 
 		LinkedList<Integer> lhs; 
 		LinkedList<Integer> rhs; 
 		double support; 
-	
 		
 		try 
 		{
@@ -72,18 +79,13 @@ public class sequenceCleaner
 					token = tokenizer.nextToken(); 
 					support = (Double.parseDouble(token)); 
 					
-					rules.add(new Rule(lhs, rhs, support));   // add the newest rule to the list
+					rules.add(new AssociationRule(lhs, rhs, support));   // add the newest rule to the list
 					
 				}
 				
 				line = in.readLine(); 
 			}
-						
-			num_rules_after_cleaning = num_rules_kept - cleanRules(rules); 
 			
-			System.out.println("rules read: " + num_rules_read); 
-			System.out.println("rules kept: " + num_rules_after_cleaning); 
-
 			for(int i = 0; i < rules.size(); i++)
 			{
 				if(!rules.get(i).removed)
@@ -92,16 +94,18 @@ public class sequenceCleaner
 			
 			in.close(); 
 			out.close(); 
-			
 		}
 		catch(Exception e)
 		{
 			System.out.println(e.getMessage()); 
 		}
-		
+	}
+
+	public static void main(String [] args)
+	{		
 	}
 	
-	public static int cleanRules(LinkedList<Rule> rules)
+	public static int cleanRules(LinkedList<AssociationRule> rules)
 	{
 		int num_rules_discarded = 0; 
 		
@@ -135,45 +139,9 @@ public class sequenceCleaner
 		//System.out.println("rules discarded: " + num_rules_discarded); 
 		return num_rules_discarded; 
 	}
-	
 }
 
-class Rule
-{
-	public List<Integer> lhs; 
-	public List<Integer> rhs; 
-	public double support; 
-	public boolean removed; 
-	
-	public Rule(List<Integer> l, List<Integer> r, double supp)
-	{
-		lhs = l; 
-		rhs = r; 
-		support = supp; 
-		removed = false; 
-	}
-	
-	public String ruleToString()
-	{
-		String rule = ""; 
-		
-		for(int i = 0; i < lhs.size(); i++)
-		{
-			rule += lhs.get(i).intValue() + " "; 
-		}
-		
-		rule += " ==> "; 
-		
-		for(int i = 0; i < rhs.size(); i++)
-		{
-			rule += rhs.get(i).intValue() + " "; 
-		}
-		
-		rule += ", " + support + "\n";
-		
-		return rule; 
-	}
-}
+
 
 
 

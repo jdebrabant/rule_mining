@@ -70,6 +70,7 @@ public class SequenceGenerator
 
         public void scatter()
         {
+			/*
             //set to original values
             x_new = x;
             delta_x_new = delta_x;
@@ -80,13 +81,30 @@ public class SequenceGenerator
             delta_x_new = delta_x + rand.nextInt(max_delta_x);
             y_new = y + rand.nextDouble() * max_delta_y; 
             delta_y_new = delta_y + rand.nextDouble() * max_delta_y; 
+			 
+			 
+			 */
+			
+			delta_x_new = 0; 
+			delta_y_new = 0; 
+			
+			//set to original values
+            x_new = x;
+            delta_x_new = delta_x;
+            y_new = y;
+            delta_y_new = delta_y;
+            //get new values
+            x_new = x; //+ rand.nextInt(max_delta_x);
+            delta_x_new = delta_x; // + rand.nextInt(max_delta_x);
+            y_new = y; // + rand.nextDouble() * max_delta_y; 
+            delta_y_new = delta_y; //  + rand.nextDouble() * max_delta_y; 
         }
 			
 		public String convertToSQL()
 		{			
 			return ("SELECT * FROM quote " + 
-					"WHERE time > " + x_new + " AND time < " + (x_new + delta_x_new) + 
-					" AND price > " + y_new + " AND price < " + (y_new + delta_y_new) + "\n"); 
+					"WHERE quote_time > " + x_new + " AND quote_time < " + (x_new + delta_x_new) + 
+					" AND offer_price > " + y_new + " AND offer_price < " + (y_new + delta_y_new) + "\n"); 
 		}
 
         public String checkPartitions()
@@ -300,12 +318,19 @@ public class SequenceGenerator
 		}
 	}
 
-    public void runTask1() //3 non-contigous boxes, upward trend
+    public void runTask1() //3 non-contiguous boxes, upward trend
     {
         LinkedList<QueryBox> boxList = new LinkedList <QueryBox>();
+		/*
         QueryBox box1 = new QueryBox(18000, 28800, 25, 50); //5  to 8 AM
         QueryBox box2 = new QueryBox(39600, 50400, 100, 50); //11AM to 2PM
         QueryBox box3 = new QueryBox(61200, 72000, 175, 50); // 5 PM to 8PM
+		 */
+		
+		QueryBox box1 = new QueryBox(18000, 8000, 25, 10); //5  to 8 AM
+        QueryBox box2 = new QueryBox(39600, 8000, 100, 10); //11AM to 2PM
+        QueryBox box3 = new QueryBox(61200, 8000, 175, 10); // 5 PM to 8PM
+		
         boxList.add(box1);
         boxList.add(box2);
         boxList.add(box3);
@@ -316,12 +341,23 @@ public class SequenceGenerator
     public void runTask2() // 6 contigous boxes, linearly arranged
     {
         LinkedList<QueryBox> boxList = new LinkedList <QueryBox>();
+		
+		/*
         QueryBox box1 = new QueryBox(18000, 9000, 100, 100); //5  AM
         QueryBox box2 = new QueryBox(27000, 9000, 100, 100); //7:30 AM
         QueryBox box3 = new QueryBox(36000, 9000, 100, 100);  ///10 AM
         QueryBox box4 = new QueryBox(45000, 9000, 100, 100); //12:30 PM
         QueryBox box5 = new QueryBox(54000, 9000, 100, 100); //3 PM
         QueryBox box6 = new QueryBox(63000, 9000, 100, 100); //5:30 PM to 8PM
+		 */
+		
+		QueryBox box1 = new QueryBox(18000, 9000, 100, 100); 
+        QueryBox box2 = new QueryBox(19000, 9000, 100, 100); 
+        QueryBox box3 = new QueryBox(20000, 9000, 100, 100); 
+        QueryBox box4 = new QueryBox(21000, 9000, 100, 100); 
+        QueryBox box5 = new QueryBox(22000, 9000, 100, 100); 
+        QueryBox box6 = new QueryBox(23000, 9000, 100, 100); 
+		
         boxList.add(box1);
         boxList.add(box2);
         boxList.add(box3);
@@ -348,7 +384,6 @@ public class SequenceGenerator
         writer(boxList, 3);
 
     }
-	
 	
 	// deprecated, not used in current implementation 
 	public void trim(String in, String out)

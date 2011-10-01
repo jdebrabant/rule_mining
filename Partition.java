@@ -46,7 +46,7 @@ public class Partition
 	public String toSQL()
 	{
 		return ("SELECT * FROM quote " + 
-				"WHERE time > " + x_min+ " AND time < " + x_max + 
-				" AND price > " + y_min + " AND price < " + y_max + "\n");
+				"WHERE quote_time > " + x_min+ " AND quote_time < " + x_max + 
+				" AND offer_price > " + y_min + " AND offer_price < " + y_max + "\n");
 	}
 }

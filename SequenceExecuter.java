@@ -13,10 +13,10 @@ import java.sql.*;
 
 public class SequenceExecuter
 {
+	private final int MAX_RECURSION_DEPTH = 3; 
+	
 	private Connection conn; 
-	
-	private AssociationRuleTester tester;
-	
+		
 	private int think_time_milli; 
 	
 	private LinkedList<AssociationRule> rules; 
@@ -39,9 +39,9 @@ public class SequenceExecuter
 	
 	public static void main(String args[])
 	{
-		if(args.length != 1)
+		if(args.length != 4)
 		{
-			System.out.println("Usage: java SequenceExecuter <optimized, naive>"); 
+			System.out.println("Usage: java SequenceExecuter <optimized, naive> <sql log file> <parition log file> <rule file>"); 
 			System.exit(1); 
 		}
 		
@@ -49,16 +49,22 @@ public class SequenceExecuter
 		
 		executer.DBConnect(); 
 		
+		//executer.readSQLFile("data/sql1.txt"); 
+		executer.readSQLFile(args[1]); 
+
+		
 		if(args[0].equals("optimized"))
 		{
-			executer.readLogFile(""); 
-			executer.readRuleFile("");
+			//executer.readPartitionFile("data/partition1.txt"); 
+			//executer.readRuleFile("rules.txt");
+			
+			executer.readPartitionFile(args[2]); 
+			executer.readRuleFile(args[3]);
 			
 			executer.runSimulationOptimized(); 
 		}
 		else if(args[0].equals("naive"))
 		{
-			executer.readQueryFile(""); 
 			
 			executer.runSimulationNaive(); 
 		}
@@ -121,7 +127,7 @@ public class SequenceExecuter
 				ranked_partitions = new LinkedList<Partition>(); 
 				
 				// predict next partitions based on current query
-				predictNextParititions(query_partitions.get(i), predicted_partitions, supports); 
+				predictNextParititions(query_partitions.get(i), predicted_partitions, supports, 1); 
 				
 				//rankPartitions(predicted_partitions); 
 				
@@ -129,7 +135,10 @@ public class SequenceExecuter
 				
 				think_time_expired = false; 
 				
-				thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing) 
+				if(predicted_partitions.size() > 0)
+				{
+					thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
+				}
 				
 				Thread.sleep(think_time_milli);
 				
@@ -141,24 +150,24 @@ public class SequenceExecuter
 		}
 		catch(Exception e)
 		{
-			System.out.println(e.getMessage()); 
+			System.out.println("optimized simulation error: " + e.getMessage()); 
 		}
 	}
 	
 	public void predictNextParititions(LinkedList<Integer> current_partitions, 
-									   LinkedList< LinkedList<Integer> > predicted_partitions, 
-									   LinkedList<Double> supports)
+												LinkedList< LinkedList<Integer> > predicted_partitions, 
+												LinkedList<Double> supports, 
+												int depth)
 	{
-		//LinkedList<Integer> predicted_partitions = new LinkedList<Integer>(); 
 		int highest_supports_rule = 0; 
-		//double max_conf = 0;
 		
 		int num_predictions_added = 0; 
 		boolean added;
 		
-		for(int i = 0; i < rules.size(); i++)
+		for(int i = 0; i < rules.size(); i++)  // iterate through all rules finding ones with LHS that intersect the current query
 		{
-			if(rules.get(i).lhs.containsAll(current_partitions))
+			if(setIntersect(current_partitions, rules.get(i).lhs) > .8)
+				//if(rules.get(i).lhs.containsAll(current_partitions))
 			{
 				added = false; 
 				// insert predicted partitions and support into list sorted by support value
@@ -166,6 +175,7 @@ public class SequenceExecuter
 				{
 					if(supports.get(j) < rules.get(i).support)
 					{
+						num_predictions_added++; 
 						predicted_partitions.add(j, rules.get(i).rhs);			// add predicted partitions 
 						supports.add(j, new Double(rules.get(i).support));	// add support 
 						added = true; 
@@ -175,10 +185,42 @@ public class SequenceExecuter
 				
 				if(!added)  // add to the ends of the lists
 				{
+					num_predictions_added++; 
+					
 					predicted_partitions.add(rules.get(i).rhs); 
 					supports.add(new Double(rules.get(i).support)); 
 				}
 			}
+		}
+		
+		depth++; 
+		if(depth <= MAX_RECURSION_DEPTH)  // recurse
+		{
+			depth++; 
+			//predictNextParititionsRecursive(predicted_partitions.get(0), predicted_partitions, supports, depth); 
+		}
+		
+		System.out.println("predictions made for query " + current_partitions + ": " + num_predictions_added);
+	}
+	
+	
+	public void getQueryCost(String query)
+	{
+		Statement stmt;
+		ResultSet result; 
+				
+		query = "EXPLAIN " + query; 
+		
+		try 
+		{
+			stmt = conn.createStatement(); 
+			
+			result = stmt.executeQuery(query); 
+			
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage()); 
 		}
 	}
 	
@@ -202,6 +244,25 @@ public class SequenceExecuter
 	}
 	 */
 	
+	public double setIntersect(List<Integer> set1, List<Integer> set2)
+	{
+		int intersect_count = 0; 
+		
+		//System.out.println("intersecting set " + set1 + " and set " + set2); 
+		
+		for(int i = 0; i < set1.size(); i++)
+		{
+			if(set2.contains(set1.get(i)))
+				intersect_count++; 
+		}
+		
+		//System.out.println("count = " + intersect_count); 
+		
+		return (intersect_count/(double)set1.size());
+		//return intersect_count; 
+	}
+	
+	/*
 	public void readPartitionFile(String filename)
 	{
 		BufferedReader partition_file; 
@@ -236,14 +297,17 @@ public class SequenceExecuter
 		{
 		}
 	}
+	 */
 	
 	
-	public void readQueryFile(String filename)
+	public void readSQLFile(String filename)
 	{
 		BufferedReader query_file; 
 		
 		String line; 
 		StringTokenizer tokenizer; 
+		
+		int lines_read = 0; 
 		
 		try 
 		{
@@ -251,9 +315,14 @@ public class SequenceExecuter
 			
 			while((line = query_file.readLine()) != null)
 			{
+				sql_queries.add(line); 
 				
+				lines_read++; 
+
 			}
 			
+			System.out.println("...read " + lines_read + " sql queries\n");
+
 		}
 		catch(Exception e)
 		{
@@ -261,15 +330,17 @@ public class SequenceExecuter
 		}
 	}
 	
-	public void readLogFile(String filename)
+	public void readPartitionFile(String filename)
 	{		
 		BufferedReader log_file; 
 		
 		String line; 
-        StringTokenizer tokenizer; 
-        int lines_read = 0;
+        StringTokenizer tokenizer;
+        int queries_read = 0;
         int num_partitions = 0;
 		int sum_partitions = 0;
+		
+		String token; 
 		
 		try 
         {
@@ -277,29 +348,43 @@ public class SequenceExecuter
 			
 			while((line = log_file.readLine()) != null)
             {
-                tokenizer = new StringTokenizer(line, " "); 
-                query_partitions.add(new LinkedList<Integer>()); 
+				tokenizer = new StringTokenizer(line, " ");
 				
-                while(tokenizer.hasMoreTokens())
-                {
-                    query_partitions.get(lines_read).add(new Integer(Integer.parseInt(tokenizer.nextToken()))); 
-                    num_partitions++;
-                }
+				query_partitions.add(new LinkedList<Integer>()); 
 				
-                lines_read++; 
+				while(tokenizer.hasMoreTokens())
+				{
+					token = tokenizer.nextToken(); 
+
+					if(token.equals("-1"))  // end of the current query in the sequence
+					{
+						queries_read++; 
+						query_partitions.add(new LinkedList<Integer>()); 
+						continue; 
+					}
+					else if(token.equals("-2")) // end of the line
+					{
+						break; 
+					}
+					
+					query_partitions.get(queries_read).add(new Integer(Integer.parseInt(token))); 
+				}
             }
 			
 			log_file.close(); 
-            System.out.println("\n...read " + lines_read + " queries\n");
+            System.out.println("...read " + queries_read + " partition queries\n");
+			
+			/*  
+			for(int i = 0; i < query_partitions.size(); i++)   // print partition queries (for testing)
+				System.out.print(query_partitions.get(i) + ", ");
+			 */
 			
         }
         catch (Exception e) 
         {
             System.out.println(e.getMessage()); 
         }
-		
 	}
-	
 	
 	public void readRuleFile(String filename)
 	{
@@ -355,19 +440,18 @@ public class SequenceExecuter
 			}	
 			
 			rule_file.close(); 
-			System.out.println("\n...read " + num_rules_read + " rules");
+			System.out.println("...read " + num_rules_read + " rules");
 			
         }
         catch (Exception e) 
         {
             System.out.println(e.getMessage()); 
         }
-		
 	}
 		
 	public void DBConnect()
 	{
-		String user =  new String(""); 
+		String user =  new String("mrjd225"); 
 		String password = new String(""); 
 		String url = new String("jdbc:postgresql:nyse");
 		
@@ -381,8 +465,6 @@ public class SequenceExecuter
 		{
 			System.out.println(e.getMessage()); 
 		}
-		
-		
 	}
 	
 	class PrefetchThread extends Thread
@@ -412,6 +494,8 @@ public class SequenceExecuter
 					
 					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
 					
+					getQueryCost(next_partition.toSQL()); 
+					
 					result = stmt.executeQuery(next_partition.toSQL());
 					
 					// prefetch next partition
@@ -420,7 +504,7 @@ public class SequenceExecuter
 			}
 			catch(Exception e)
 			{
-				System.out.println(e.getMessage()); 
+				System.out.println("prefetch error: " + e.getMessage()); 
 			}
 		}
 	}

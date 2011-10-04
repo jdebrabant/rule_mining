@@ -5,9 +5,7 @@
 
  ****************************************************************************************************/
 
-
 import java.util.*; 
-
 
 public class Partition
 {
@@ -40,7 +38,7 @@ public class Partition
 	
 	public String toString()
 	{
-		return (partition_id + " " + x_min + " " + x_max + " " + y_min + " " + y_max + "\n"); 
+		return (new String(partition_id + " " + x_min + " " + x_max + " " + y_min + " " + y_max + "\n")); 
 	}
 	
 	public String toSQL()

@@ -14,9 +14,11 @@ public class SequenceGenerator
 {
     private Random rand;
 
+	private FileWriter partition_info_out; 
 	
     private FileWriter partition_out_1; 
-	private FileWriter query_out_1; 
+	private FileWriter query_out_1;
+	private FileWriter rule_miner_input_1; 
 	
     private FileWriter partition_out_2; 
 	private FileWriter query_out_2; 
@@ -171,8 +173,8 @@ public class SequenceGenerator
 			
             // run each task 1000 times
             task_simulator.runTask1(); 
-            task_simulator.runTask2(); 
-            task_simulator.runTask3(); 
+            //task_simulator.runTask2(); 
+            //task_simulator.runTask3(); 
 
             task_simulator.finishTasks();
 
@@ -200,17 +202,22 @@ public class SequenceGenerator
         
         grid = new LinkedList<Partition>(); 
         String attribute; 
-        createPartitions(); 
         
         try
         {
+			partition_info_out = new FileWriter("data/partition_info.txt"); 
+			
 			partition_out_1 = new FileWriter("data/partition1.txt"); 
-			partition_out_2 = new FileWriter("data/partition2.txt"); 
-			partition_out_3 = new FileWriter("data/partition3.txt"); 
+			//partition_out_2 = new FileWriter("data/partition2.txt"); 
+			//partition_out_3 = new FileWriter("data/partition3.txt"); 
+			
+			rule_miner_input_1 = new FileWriter("data/miner1.txt"); 
 			
 			query_out_1 = new FileWriter("data/sql1.txt");
-			query_out_2 = new FileWriter("data/sql2.txt");
-			query_out_3 = new FileWriter("data/sql3.txt");
+			//query_out_2 = new FileWriter("data/sql2.txt");
+			//query_out_3 = new FileWriter("data/sql3.txt");
+			
+			createPartitions(); 
 
         }
         catch(Exception e)
@@ -226,73 +233,96 @@ public class SequenceGenerator
         double curr_y = min_y; 
         int partition_id = 0;  
 		
-        for(int i = 0; i < num_partitions_x; i++)
-        {
-            for(int j = 0; j < num_partitions_y; j++)
-            {
-                grid.add(new Partition(curr_x, curr_x+partition_size_x, 
-                                       curr_y, curr_y+partition_size_y, 
-                                       "partition_"+i+"_"+j, partition_id)); 
-                
-                curr_y += partition_size_y; 
-                
-                if(curr_y > max_y)
-                    curr_y = max_y; 
+		Partition p; 
+		
+		try 
+		{
+			for(int i = 0; i < num_partitions_x; i++)
+			{
+				for(int j = 0; j < num_partitions_y; j++)
+				{
+					p = new Partition(curr_x, curr_x+partition_size_x, 
+									  curr_y, curr_y+partition_size_y, 
+									  "partition_"+i+"_"+j, partition_id); 
+					
+					grid.add(p); 
+					
+					//partition_info_out.write(p.toString()); 
+					
+					curr_y += partition_size_y; 
+					
+					if(curr_y > max_y)
+						curr_y = max_y; 
+					
+					partition_id++; 
+				}
+				curr_x += partition_size_x; 
+				curr_y = min_y;
 				
-				partition_id++; 
-            }
-            curr_x += partition_size_x; 
-            curr_y = min_y;
-            
-            if(curr_x > max_x)
-                curr_x = max_x; 
-        }
+				if(curr_x > max_x)
+					curr_x = max_x; 
+			}
+			
+			writePartitions(); 
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage()); 
+		}
     }
 
     public void writer(List<QueryBox> boxList, int task)
     {
 		try
 		{
-			for(int i = 0; i < 25; i++)
+
+			for(QueryBox box: boxList)
 			{
-				for(QueryBox box: boxList)
-				{
-					box.scatter();
-				   
-						switch(task)
-						{
-						case 1:                       
-							partition_out_1.write(box.checkPartitions());
-							query_out_1.write(box.convertToSQL()); 
-							break;
-						case 2:
-							partition_out_2.write(box.checkPartitions());
-							query_out_2.write(box.convertToSQL()); 
-							break;
-						case 3:
-							partition_out_3.write(box.checkPartitions());
-							query_out_3.write(box.convertToSQL()); 
-							break;
-						default:
-							System.out.println("Error!!!!");
-						}
-				}
-				
-				switch(task)
-				{
+				box.scatter();
+			   
+					switch(task)
+					{
 					case 1:                       
-						partition_out_1.write("-2\n"); 
+						partition_out_1.write(box.checkPartitions() + "\n");
+						query_out_1.write(box.convertToSQL()); 
 						break;
 					case 2:
-						partition_out_2.write("-2\n"); 
+						partition_out_2.write(box.checkPartitions());
+						query_out_2.write(box.convertToSQL()); 
 						break;
 					case 3:
-						partition_out_3.write("-2\n"); 
+						partition_out_3.write(box.checkPartitions());
+						query_out_3.write(box.convertToSQL()); 
 						break;
 					default:
 						System.out.println("Error!!!!");
-				}
+					}
 			}
+			
+			/*
+			switch(task)
+			{
+				case 1:                       
+					partition_out_1.write("-2\n"); 
+					break;
+				case 2:
+					partition_out_2.write("-2\n"); 
+					break;
+				case 3:
+					partition_out_3.write("-2\n"); 
+					break;
+				default:
+					System.out.println("Error!!!!");
+			}
+			 */
+			
+			for(int i = 0; i < boxList.size()-1; i++)
+			{
+				rule_miner_input_1.write(boxList.get(i).checkPartitions()); 
+				rule_miner_input_1.write(boxList.get(i+1).checkPartitions());
+				rule_miner_input_1.write("-2\n"); 
+			}
+			
 		}
 		catch(Exception e)
 		{
@@ -300,21 +330,21 @@ public class SequenceGenerator
 		}
     }
 	
-	public void writePartitions(String filename)
-	{
-		BufferedWriter out; 
+	public void writePartitions()
+	{		
+		//System.out.println("writing partition info for " + grid.size() + " partitions"); 
 		
 		try 
-		{
-			out = new BufferedWriter(new FileWriter(filename)); 
-			
+		{			
 			for(int i = 0; i < grid.size(); i++)
 			{
-				out.write(grid.get(i).toString()); 
+				grid.get(i).toString(); 
+				partition_info_out.write(grid.get(i).toString()); 
 			}
 		}
 		catch(Exception e)
 		{
+			System.out.println(e.getMessage()); 
 		}
 	}
 
@@ -327,14 +357,17 @@ public class SequenceGenerator
         QueryBox box3 = new QueryBox(61200, 72000, 175, 50); // 5 PM to 8PM
 		 */
 		
-		QueryBox box1 = new QueryBox(18000, 8000, 25, 10); //5  to 8 AM
-        QueryBox box2 = new QueryBox(39600, 8000, 100, 10); //11AM to 2PM
-        QueryBox box3 = new QueryBox(61200, 8000, 175, 10); // 5 PM to 8PM
+		for(int i = 0; i < 25; i++)
+		{
+			QueryBox box1 = new QueryBox(18000, 8000, 25, 10); //5  to 8 AM
+			QueryBox box2 = new QueryBox(39600, 8000, 100, 10); //11AM to 2PM
+			QueryBox box3 = new QueryBox(61200, 8000, 175, 10); // 5 PM to 8PM
+			
+			boxList.add(box1);
+			boxList.add(box2);
+			boxList.add(box3);
+		}
 		
-        boxList.add(box1);
-        boxList.add(box2);
-        boxList.add(box3);
-
         writer(boxList, 1);
     }
 
@@ -526,9 +559,14 @@ public class SequenceGenerator
     {
         try
         {
-            partition_out_1.close(); 
-            partition_out_2.close(); 
-            partition_out_3.close();
+             
+            //partition_out_2.close(); 
+            //partition_out_3.close();
+			
+			partition_out_1.close();
+			query_out_1.close(); 
+			rule_miner_input_1.close(); 
+			partition_info_out.close(); 
 		}
         catch(Exception e)
         {

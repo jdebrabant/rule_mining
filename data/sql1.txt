@@ -69,3 +69,7 @@ SELECT * FROM quote WHERE quote_time > 39600 AND quote_time < 47600 AND offer_pr
 SELECT * FROM quote WHERE quote_time > 61200 AND quote_time < 69200 AND offer_price > 175.0 AND offer_price < 185.0
 SELECT * FROM quote WHERE quote_time > 18000 AND quote_time < 26000 AND offer_price > 25.0 AND offer_price < 35.0
 SELECT * FROM quote WHERE quote_time > 39600 AND quote_time < 47600 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 61200 AND quote_time < 69200 AND offer_price > 175.0 AND offer_price < 185.0
+SELECT * FROM quote WHERE quote_time > 18000 AND quote_time < 26000 AND offer_price > 25.0 AND offer_price < 35.0
+SELECT * FROM quote WHERE quote_time > 39600 AND quote_time < 47600 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 61200 AND quote_time < 69200 AND offer_price > 175.0 AND offer_price < 185.0

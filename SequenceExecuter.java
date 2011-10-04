@@ -10,7 +10,6 @@ import java.lang.*;
 import java.io.*; 
 import java.sql.*; 
 
-
 public class SequenceExecuter
 {
 	private final int MAX_RECURSION_DEPTH = 3; 
@@ -34,14 +33,16 @@ public class SequenceExecuter
 		query_partitions = new LinkedList< LinkedList<Integer> >(); 
 		sql_queries = new LinkedList<String>(); 
 		
+		partition_info = new HashMap<Integer, Partition>(); 
+		
 		think_time_milli = 2000; 
 	}
 	
 	public static void main(String args[])
 	{
-		if(args.length != 4)
+		if(args.length != 5)
 		{
-			System.out.println("Usage: java SequenceExecuter <optimized, naive> <sql log file> <parition log file> <rule file>"); 
+			System.out.println("Usage: java SequenceExecuter <optimized, naive> <partition info file> <sql log file> <parition log file> <rule file>"); 
 			System.exit(1); 
 		}
 		
@@ -49,17 +50,15 @@ public class SequenceExecuter
 		
 		executer.DBConnect(); 
 		
-		//executer.readSQLFile("data/sql1.txt"); 
-		executer.readSQLFile(args[1]); 
+		executer.readSQLFile(args[2]); 
 
 		
 		if(args[0].equals("optimized"))
 		{
-			//executer.readPartitionFile("data/partition1.txt"); 
-			//executer.readRuleFile("rules.txt");
 			
-			executer.readPartitionFile(args[2]); 
-			executer.readRuleFile(args[3]);
+			executer.readPartitionInfoFile(args[1]); 
+			executer.readPartitionFile(args[3]); 
+			executer.readRuleFile(args[4]);
 			
 			executer.runSimulationOptimized(); 
 		}
@@ -131,13 +130,14 @@ public class SequenceExecuter
 				
 				//rankPartitions(predicted_partitions); 
 				
-				result = stmt.executeQuery(sql_queries.get(i)); // execute query 
+				//result = stmt.executeQuery(sql_queries.get(i)); // execute query 
 				
 				think_time_expired = false; 
 				
 				if(predicted_partitions.size() > 0)
 				{
 					thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
+					thread.run(); 
 				}
 				
 				Thread.sleep(think_time_milli);
@@ -166,8 +166,8 @@ public class SequenceExecuter
 		
 		for(int i = 0; i < rules.size(); i++)  // iterate through all rules finding ones with LHS that intersect the current query
 		{
-			if(setIntersect(current_partitions, rules.get(i).lhs) > .8)
-				//if(rules.get(i).lhs.containsAll(current_partitions))
+			//if(setIntersect(current_partitions, rules.get(i).lhs) > .8)
+				if(rules.get(i).lhs.containsAll(current_partitions))
 			{
 				added = false; 
 				// insert predicted partitions and support into list sorted by support value
@@ -190,6 +190,9 @@ public class SequenceExecuter
 					predicted_partitions.add(rules.get(i).rhs); 
 					supports.add(new Double(rules.get(i).support)); 
 				}
+				
+				System.out.println("current partition: " + current_partitions + ", rule added: " 
+								   + rules.get(i).lhs + " --> " + rules.get(i).rhs + ", " + rules.get(i).support); 
 			}
 		}
 		
@@ -208,6 +211,8 @@ public class SequenceExecuter
 	{
 		Statement stmt;
 		ResultSet result; 
+		
+		int row_count = 0; 
 				
 		query = "EXPLAIN " + query; 
 		
@@ -216,6 +221,13 @@ public class SequenceExecuter
 			stmt = conn.createStatement(); 
 			
 			result = stmt.executeQuery(query); 
+			
+			while(result.next())
+			{
+				row_count++; 
+			}
+			
+			System.out.println("cost of query: " + row_count); 
 			
 		}
 		catch(Exception e)
@@ -262,8 +274,7 @@ public class SequenceExecuter
 		//return intersect_count; 
 	}
 	
-	/*
-	public void readPartitionFile(String filename)
+	public void readPartitionInfoFile(String filename)
 	{
 		BufferedReader partition_file; 
 		
@@ -274,11 +285,14 @@ public class SequenceExecuter
 		
 		String name; 
 		int id; 
-		int x_min, x_max, y_min, y_max; 
+		int x_min, x_max; 
+		double y_min, y_max; 
 		
 		try 
 		{
 			partition_file = new BufferedReader(new FileReader(filename)); 
+			
+			System.out.println("here"); 
 			
 			while((line = partition_file.readLine()) != null)
 			{
@@ -287,17 +301,19 @@ public class SequenceExecuter
 				id = Integer.parseInt(tokenizer.nextToken()); 
 				x_min = Integer.parseInt(tokenizer.nextToken()); 
 				x_max = Integer.parseInt(tokenizer.nextToken()); 
-				y_min = Integer.parseInt(tokenizer.nextToken()); 
-				y_max = Integer.parseInt(tokenizer.nextToken()); 
+				y_min = Double.parseDouble(tokenizer.nextToken()); 
+				y_max = Double.parseDouble(tokenizer.nextToken()); 
 				
 				partition_info.put(new Integer(id), new Partition(x_min, x_max, y_min, y_max, "", id));
+				
+				System.out.println("partition " + id); 
 			}
 		}
 		catch(Exception e)
 		{
+			System.out.println(e.getMessage()); 
 		}
 	}
-	 */
 	
 	
 	public void readSQLFile(String filename)
@@ -360,7 +376,7 @@ public class SequenceExecuter
 					{
 						queries_read++; 
 						query_partitions.add(new LinkedList<Integer>()); 
-						continue; 
+						break; 
 					}
 					else if(token.equals("-2")) // end of the line
 					{
@@ -483,8 +499,11 @@ public class SequenceExecuter
 			
 			Partition next_partition; 
 			
+			//System.out.println("in prefetch thread"); 
+			
 			try 
-			{				
+			{		
+				System.out.println("...in prefetch thread...prefetching " + partitions_to_prefetch.size() + " partitions"); 
 				for(int i = 0; i < partitions_to_prefetch.size(); i++)
 				{
 					if(think_time_expired)   // stop prefetching
@@ -492,8 +511,10 @@ public class SequenceExecuter
 					
 					stmt = conn.createStatement(); 
 					
-					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
+					System.out.println("prefetching partition " + partitions_to_prefetch.get(i)); 
 					
+					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
+										
 					getQueryCost(next_partition.toSQL()); 
 					
 					result = stmt.executeQuery(next_partition.toSQL());

@@ -35,7 +35,7 @@ public class SequenceExecuter
 		
 		partition_info = new HashMap<Integer, Partition>(); 
 		
-		think_time_milli = 2000; 
+		think_time_milli = 5000; 
 	}
 	
 	public static void main(String args[])
@@ -55,7 +55,6 @@ public class SequenceExecuter
 		
 		if(args[0].equals("optimized"))
 		{
-			
 			executer.readPartitionInfoFile(args[1]); 
 			executer.readPartitionFile(args[3]); 
 			executer.readRuleFile(args[4]);
@@ -89,7 +88,7 @@ public class SequenceExecuter
 			}
 			end_time = System.currentTimeMillis(); 
 			
-			System.out.println("total execution time: " + (end_time - start_time)); 
+			System.out.println("total execution time: " + ((end_time - start_time)/1000.0)); 
 		}
 		catch(Exception e)
 		{
@@ -126,11 +125,17 @@ public class SequenceExecuter
 				ranked_partitions = new LinkedList<Partition>(); 
 				
 				// predict next partitions based on current query
-				predictNextParititions(query_partitions.get(i), predicted_partitions, supports, 1); 
+				predictNextParititions(query_partitions.get(i), predicted_partitions, supports, 1);
+				
+				System.out.print("Predictions for current query " + query_partitions.get(i) + ": "); 
+				for(int j = 0; j < predicted_partitions.size(); j++)
+				{
+					System.out.println(predicted_partitions.get(j) + ", " + supports.get(j)); 
+				}
 				
 				//rankPartitions(predicted_partitions); 
 				
-				//result = stmt.executeQuery(sql_queries.get(i)); // execute query 
+				result = stmt.executeQuery(sql_queries.get(i)); // execute query 
 				
 				think_time_expired = false; 
 				
@@ -146,7 +151,7 @@ public class SequenceExecuter
 			}
 			end_time = System.currentTimeMillis(); 
 			
-			System.out.println("total execution time: " + (end_time - start_time)); 
+			System.out.println("total execution time: " + ((end_time - start_time)/1000.0)); 
 		}
 		catch(Exception e)
 		{
@@ -166,8 +171,8 @@ public class SequenceExecuter
 		
 		for(int i = 0; i < rules.size(); i++)  // iterate through all rules finding ones with LHS that intersect the current query
 		{
-			//if(setIntersect(current_partitions, rules.get(i).lhs) > .8)
-				if(rules.get(i).lhs.containsAll(current_partitions))
+			if(setIntersect(current_partitions, rules.get(i).lhs) > .8)
+				//if(rules.get(i).lhs.containsAll(current_partitions))
 			{
 				added = false; 
 				// insert predicted partitions and support into list sorted by support value
@@ -181,6 +186,17 @@ public class SequenceExecuter
 						added = true; 
 						break; 
 					}
+					else if(supports.get(j) == rules.get(i).support)  // support is equal, choose the rule with higher intersection percent
+					{
+						if(setIntersect(current_partitions, rules.get(j).lhs) < setIntersect(current_partitions, rules.get(i).lhs))
+						{
+							num_predictions_added++; 
+							predicted_partitions.add(j, rules.get(i).rhs);			// add predicted partitions 
+							supports.add(j, new Double(rules.get(i).support));	// add support 
+							added = true; 
+							break; 
+						}
+					}
 				}
 				
 				if(!added)  // add to the ends of the lists
@@ -191,8 +207,8 @@ public class SequenceExecuter
 					supports.add(new Double(rules.get(i).support)); 
 				}
 				
-				System.out.println("current partition: " + current_partitions + ", rule added: " 
-								   + rules.get(i).lhs + " --> " + rules.get(i).rhs + ", " + rules.get(i).support); 
+				//System.out.println("current partition: " + current_partitions + ", rule added: " 
+				//				   + rules.get(i).lhs + " --> " + rules.get(i).rhs + ", " + rules.get(i).support); 
 			}
 		}
 		
@@ -200,40 +216,56 @@ public class SequenceExecuter
 		if(depth <= MAX_RECURSION_DEPTH)  // recurse
 		{
 			depth++; 
-			//predictNextParititionsRecursive(predicted_partitions.get(0), predicted_partitions, supports, depth); 
+			//predictNextParititions(predicted_partitions.get(0), predicted_partitions, supports, depth); 
 		}
 		
-		System.out.println("predictions made for query " + current_partitions + ": " + num_predictions_added);
+		//System.out.println("predictions made for query " + current_partitions + ": " + num_predictions_added);
 	}
 	
 	
-	public void getQueryCost(String query)
+	public double getQueryCost(String query)
 	{
 		Statement stmt;
 		ResultSet result; 
+		//ResultSetMetaData meta; 
 		
-		int row_count = 0; 
-				
+		StringTokenizer tokenizer; 
+		
+		String cost_str; 
+		double cost = 0; 
+						
 		query = "EXPLAIN " + query; 
 		
 		try 
 		{
 			stmt = conn.createStatement(); 
 			
-			result = stmt.executeQuery(query); 
+			result = stmt.executeQuery(query);
+			//meta = result.getMetaData(); 
 			
-			while(result.next())
-			{
-				row_count++; 
-			}
+			result.next(); 
 			
-			System.out.println("cost of query: " + row_count); 
+			tokenizer = new StringTokenizer(result.getString(1), ".");
 			
+			// skip the first 2 tokens
+			tokenizer.nextToken(); 
+			tokenizer.nextToken(); 
+			
+			// total cost is the concatenation of the 3rd and 4th tokens
+			cost_str = tokenizer.nextToken() + tokenizer.nextToken(" "); 
+			cost = Double.parseDouble(cost_str); 
+			
+			//System.out.println("query cost: " + cost); 
+			//System.out.println("explain result: " + result.getString(1)); 	
+			
+			result.close(); 
 		}
 		catch(Exception e)
 		{
 			System.out.println(e.getMessage()); 
 		}
+		
+		return cost; 
 	}
 	
 	/*
@@ -306,7 +338,7 @@ public class SequenceExecuter
 				
 				partition_info.put(new Integer(id), new Partition(x_min, x_max, y_min, y_max, "", id));
 				
-				System.out.println("partition " + id); 
+				//System.out.println("partition " + id); 
 			}
 		}
 		catch(Exception e)

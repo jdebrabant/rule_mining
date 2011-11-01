@@ -16,7 +16,6 @@ public class SequenceExecuter
 	
 	private Connection conn; 
 		
-	private int think_time_milli; 
 	
 	private LinkedList<AssociationRule> rules; 
 	private LinkedList< LinkedList<Integer> > query_partitions; 
@@ -24,7 +23,9 @@ public class SequenceExecuter
 	
 	private HashMap<Integer, Partition> partition_info; 
 	
+	private int think_time_milli; 
 	private boolean think_time_expired; 
+	private int think_time_remaining; 
 	
 	
 	public SequenceExecuter()
@@ -151,14 +152,22 @@ public class SequenceExecuter
 				System.out.println("result has " + row_count + " rows"); 
 				
 				think_time_expired = false; 
+				think_time_remaining = think_time_milli / 1000; 
 				
+				// launch prefetch thread
 				if(predicted_partitions.size() > 0)
 				{
-					//thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
-					//thread.run(); 
+					thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
+					thread.run(); 
 				}
 				
-				Thread.sleep(think_time_milli);
+				while(think_time_remaining > 0)
+				{
+					//Thread.sleep(think_time_milli);
+					Thread.sleep(1000); // sleep 1 second
+					
+					think_time_remaining--; // decrement by one second
+				}
 				
 				think_time_expired = true; // stop prefetching
 			}
@@ -591,9 +600,8 @@ public class SequenceExecuter
 										
 					getQueryCost(next_partition.toSQL()); 
 					
+					stmt.setQueryTimeout(think_time_remaining); 
 					result = stmt.executeQuery(next_partition.toSQL());
-					
-					// prefetch next partition
 				}
 				
 			}
@@ -604,16 +612,6 @@ public class SequenceExecuter
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
 
 
 

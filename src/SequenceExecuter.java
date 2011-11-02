@@ -604,7 +604,7 @@ public class SequenceExecuter
 
 					stmt.addBatch("SET statement_timeout TO 5000");
 					stmt.addBatch(next_partition.toSQL()); 
-					stmt.addBatch("RESET statement_timeout");
+					//stmt.addBatch("RESET statement_timeout");
 					stmt.executeBatch(); 
 					
 					//stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 

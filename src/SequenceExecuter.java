@@ -612,7 +612,7 @@ public class SequenceExecuter
 					
 					s = conn.prepareStatement("SELECT set_config('statement_timeout', ? , false);"); 
 					s.setInt(1, 5000); 
-					result = s.executeQuery("SELECT set_config('statement_timeout', 5000, false);"); 
+					result = s.executeQuery(); 
 					result.next(); 
 					System.out.println("'statement_timeout' values is " + result.getString(1)); 
 					result.close(); 

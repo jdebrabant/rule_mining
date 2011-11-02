@@ -152,7 +152,7 @@ public class SequenceExecuter
 				System.out.println("result has " + row_count + " rows"); 
 				
 				think_time_expired = false; 
-				think_time_remaining = think_time_milli / 1000; 
+				think_time_remaining = think_time_milli; 
 				
 				// launch prefetch thread
 				if(predicted_partitions.size() > 0)
@@ -166,7 +166,7 @@ public class SequenceExecuter
 					//Thread.sleep(think_time_milli);
 					Thread.sleep(1000); // sleep 1 second
 					
-					think_time_remaining--; // decrement by one second
+					think_time_remaining -= 1000; // decrement by one second
 				}
 				
 				think_time_expired = true; // stop prefetching
@@ -600,8 +600,11 @@ public class SequenceExecuter
 										
 					getQueryCost(next_partition.toSQL()); 
 					
-					stmt.setQueryTimeout(think_time_remaining); 
+					//stmt.setQueryTimeout(think_time_remaining);   // not implemented by postgres jdbc driver
+					
+					stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 
 					result = stmt.executeQuery(next_partition.toSQL());
+					stmt.execute("RESET statement_timeout;"); 
 				}
 				
 			}

@@ -576,6 +576,8 @@ public class SequenceExecuter
 			
 			Partition next_partition; 
 			
+			long start_time, end_time; 
+			
 			//System.out.println("in prefetch thread"); 
 			
 			try 
@@ -596,10 +598,17 @@ public class SequenceExecuter
 					
 					//stmt.setQueryTimeout(think_time_remaining);   // not implemented by postgres jdbc driver
 					
+					start_time = System.currentTimeMillis(); 
+
 					//stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 
 					result = stmt.executeQuery(next_partition.toSQL());
 					result.close(); 
 					//stmt.execute("RESET statement_timeout;"); 
+					
+					end_time = System.currentTimeMillis(); 
+					
+					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds"); 
+
 					
 				}
 				

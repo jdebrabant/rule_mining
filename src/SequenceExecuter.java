@@ -84,6 +84,7 @@ public class SequenceExecuter
 			for(int i = 0; i < sql_queries.size(); i++)
 			{
 				result = stmt.executeQuery(sql_queries.get(i)); 
+				result.close(); 
 				
 				Thread.sleep(think_time_milli); 
 			}
@@ -142,14 +143,7 @@ public class SequenceExecuter
 				//rankPartitions(predicted_partitions); 
 				
 				result = stmt.executeQuery(sql_queries.get(i)); // execute query 
-				
-				row_count = 0; 
-				while(result.next())
-				{
-					row_count++; 
-				}
-				
-				System.out.println("result has " + row_count + " rows"); 
+				result.close(); 
 				
 				think_time_expired = false; 
 				think_time_remaining = think_time_milli; 
@@ -598,13 +592,15 @@ public class SequenceExecuter
 					
 					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
 										
-					getQueryCost(next_partition.toSQL()); 
+					//getQueryCost(next_partition.toSQL()); 
 					
 					//stmt.setQueryTimeout(think_time_remaining);   // not implemented by postgres jdbc driver
 					
 					stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 
 					result = stmt.executeQuery(next_partition.toSQL());
 					stmt.execute("RESET statement_timeout;"); 
+					
+					result.close(); 
 				}
 				
 			}

@@ -169,7 +169,7 @@ public class SequenceGenerator
             //QueryGenerator task_simulator = new QueryGenerator(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]),
             //        Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]));
 			
-			SequenceGenerator task_simulator = new SequenceGenerator(10000, 90000, 0, 150, 10, 10);
+			SequenceGenerator task_simulator = new SequenceGenerator(30000, 60000, 25, 75, 10, 10);
 			
             // run each task 1000 times
             task_simulator.runTask1(); 

@@ -602,6 +602,11 @@ public class SequenceExecuter
 					
 					start_time = System.currentTimeMillis(); 
 
+					stmt.addBatch("SET statement_timeout TO 5000");
+					stmt.addBatch(next_partition.toSQL()); 
+					stmt.addBatch("RESET statement_timeout");
+					stmt.executeBatch(); 
+					
 					//stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 
 					//result = stmt.executeQuery(next_partition.toSQL());
 					//result.close(); 

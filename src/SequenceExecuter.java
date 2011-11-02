@@ -610,14 +610,20 @@ public class SequenceExecuter
 					stmt.executeBatch(); 
 					 */
 					
+					/*
 					s = conn.prepareStatement("SELECT set_config('statement_timeout', ? , false);"); 
 					s.setInt(1, 5000); 
-					result = s.executeQuery(); 
+					 */
+					 
+					
+					result = stmt.executeQuery("SELECT set_config('statement_timeout', 5000, false)"); 
 					result.next(); 
 					System.out.println("'statement_timeout' values is " + result.getString(1)); 
 					result.close(); 
-					s = null; 
+					stmt = null; 
 					
+					stmt = conn.createStatement(); 
+										
 					
 					result = stmt.executeQuery(next_partition.toSQL());
 					result.close(); 

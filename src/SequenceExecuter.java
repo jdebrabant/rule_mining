@@ -596,11 +596,11 @@ public class SequenceExecuter
 					
 					//stmt.setQueryTimeout(think_time_remaining);   // not implemented by postgres jdbc driver
 					
-					stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 
+					//stmt.execute("SET statement_timeout TO " + think_time_remaining + ";"); 
 					result = stmt.executeQuery(next_partition.toSQL());
-					stmt.execute("RESET statement_timeout;"); 
-					
 					result.close(); 
+					//stmt.execute("RESET statement_timeout;"); 
+					
 				}
 				
 			}

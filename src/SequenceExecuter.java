@@ -573,6 +573,7 @@ public class SequenceExecuter
 		{
 			Statement stmt;
 			ResultSet result;
+			PreparedStatement s; 
 			
 			Partition next_partition; 
 			
@@ -609,10 +610,14 @@ public class SequenceExecuter
 					stmt.executeBatch(); 
 					 */
 					
-					result = stmt.executeQuery("SELECT set_config('statement_timeout', 5000, false);"); 
+					s = conn.prepareStatement("SELECT set_config('statement_timeout', ? , false);"); 
+					s.setInt(1, 5000); 
+					result = s.executeQuery("SELECT set_config('statement_timeout', 5000, false);"); 
 					result.next(); 
 					System.out.println("'statement_timeout' values is " + result.getString(1)); 
 					result.close(); 
+					s = null; 
+					
 					
 					result = stmt.executeQuery(next_partition.toSQL());
 					result.close(); 

@@ -36,7 +36,7 @@ public class SequenceExecuter
 		
 		partition_info = new HashMap<Integer, Partition>(); 
 		
-		think_time_milli = 5000; 
+		think_time_milli = 20000; 
 	}
 	
 	public static void main(String args[])
@@ -574,22 +574,6 @@ public class SequenceExecuter
 			//rs.close(); 
 			s = null; 
 			
-			/*
-			if ( rs.next() ) 
-			{
-				System.out.println("'statement_timeout' values is " + rs.getString(1)); 
-
-			} 
-			else 
-			{
-				System.out.println("'statement_timeout' could not be set 1!");
-			}
-			 
-			
-			if ( rs != null )
-				rs.close();
-			 
-			 */
 			
 			if ( s != null ) 
 				s.close();
@@ -620,9 +604,7 @@ public class SequenceExecuter
 			Partition next_partition; 
 			
 			long start_time, end_time; 
-			
-			//System.out.println("in prefetch thread"); 
-			
+						
 			try 
 			{		
 				System.out.println("...in prefetch thread...prefetching " + partitions_to_prefetch.size() + " partitions"); 
@@ -631,24 +613,21 @@ public class SequenceExecuter
 					if(think_time_expired)   // stop prefetching
 						return; 
 					
-					stmt = conn.createStatement(); 
-					
-					System.out.println("prefetching partition " + partitions_to_prefetch.get(i)); 
+					stmt = conn.createStatement();
 					
 					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
-					System.out.println("prefetching query " + next_partition.toSQL());
+					
+					System.out.println("prefetching partition " + partitions_to_prefetch.get(i) + "(" + next_partition.toSQL() + ")"); 
 										
 					//getQueryCost(next_partition.toSQL()); 
 										
 					conn.setAutoCommit(false); 
-					
-					setStatementTimeout(5000); 
+					setStatementTimeout(think_time_remaining); 
 										
 					start_time = System.currentTimeMillis();
 					
 					try 
 					{
-					
 						stmt.executeQuery(next_partition.toSQL());
 						//result.close();
 					}
@@ -657,14 +636,13 @@ public class SequenceExecuter
 						System.out.println("prefetch timed out"); 
 					}
 					end_time = System.currentTimeMillis(); 
-
+					
+					setStatementTimeout(0); 
 					conn.setAutoCommit(true); 
-
-					
 	
-					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds"); 
-
-					
+					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds");
+ 					
+					break; 
 				}
 				
 			}

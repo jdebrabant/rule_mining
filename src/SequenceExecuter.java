@@ -112,7 +112,9 @@ public class SequenceExecuter
 		
 		PrefetchThread thread; 
 		
-		long start_time, end_time; 
+		long start_time, end_time;
+		
+		long query_start_time, query_end_time; 
 		
 		int row_count; 
 		
@@ -142,9 +144,14 @@ public class SequenceExecuter
 								
 				//rankPartitions(predicted_partitions); 
 				
+				query_start_time = System.currentTimeMillis();
 				result = stmt.executeQuery(sql_queries.get(i)); // execute query 
-				result.close(); 
+				result.close();
+				query_end_time = System.currentTimeMillis();
 				
+				System.out.println("query " + i + " runtime: " + ((query_end_time - query_start_time)/1000.0) + " seconds"); 
+				
+				// reset think time counters 
 				think_time_expired = false; 
 				think_time_remaining = think_time_milli; 
 				
@@ -617,7 +624,7 @@ public class SequenceExecuter
 					
 					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
 					
-					System.out.println("prefetching partition " + partitions_to_prefetch.get(i) + "(" + next_partition.toSQL() + ")"); 
+					System.out.println("prefetching partition " + partitions_to_prefetch.get(i) + ": " + next_partition.toSQL()); 
 										
 					//getQueryCost(next_partition.toSQL()); 
 										

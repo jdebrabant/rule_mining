@@ -645,8 +645,17 @@ public class SequenceExecuter
 					setStatementTimeout(5000); 
 										
 					start_time = System.currentTimeMillis();
-					result = stmt.executeQuery(next_partition.toSQL());
-					result.close(); 
+					
+					try 
+					{
+					
+						stmt.executeQuery(next_partition.toSQL());
+						//result.close();
+					}
+					catch(Exception e)
+					{
+						System.out.println("prefetch timed out"); 
+					}
 					end_time = System.currentTimeMillis(); 
 
 					conn.setAutoCommit(true); 

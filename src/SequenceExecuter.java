@@ -74,7 +74,8 @@ public class SequenceExecuter
 		Statement stmt;
 		ResultSet result; 
 		
-		long start_time, end_time; 
+		long start_time, end_time;
+		long query_start_time, query_end_time; 
 		
 		try 
 		{
@@ -83,8 +84,12 @@ public class SequenceExecuter
 			start_time = System.currentTimeMillis(); 
 			for(int i = 0; i < sql_queries.size(); i++)
 			{
+				query_start_time = System.currentTimeMillis();
 				result = stmt.executeQuery(sql_queries.get(i)); 
 				result.close(); 
+				query_end_time = System.currentTimeMillis();
+				
+				System.out.println("query " + i + " runtime: " + ((query_end_time - query_start_time)/1000.0) + " seconds"); 
 				
 				Thread.sleep(think_time_milli); 
 			}

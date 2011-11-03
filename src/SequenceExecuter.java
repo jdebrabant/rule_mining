@@ -560,6 +560,41 @@ public class SequenceExecuter
 		}
 	}
 	
+	public void setStatementTimeout(int milliseconds)
+	{
+		Statement s = null;
+		ResultSet rs = null;
+		try 
+		{
+			s = conn.createStatement(); 
+			
+			rs = s.executeQuery("SELECT set_config('statement_timeout', 5000, false)"); 
+			rs.next(); 
+			rs.close(); 
+			s = null; 
+			if ( rs.next() ) 
+			{
+				System.out.println("'statement_timeout' values is " + rs.getString(1)); 
+
+			} 
+			else 
+			{
+				System.out.println("'statement_timeout' could not be set!");
+			}
+			
+			if ( rs != null )
+				rs.close();
+			
+			if ( s != null ) 
+				s.close();
+			
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("'statement_timeout' could not be set!");
+		}
+	}
+	
 	class PrefetchThread extends Thread
 	{
 		LinkedList<Integer> partitions_to_prefetch;  
@@ -594,42 +629,22 @@ public class SequenceExecuter
 					System.out.println("prefetching partition " + partitions_to_prefetch.get(i)); 
 					
 					next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(i))); 
+					System.out.println("prefetching query " + next_partition.toSQL());
 										
 					//getQueryCost(next_partition.toSQL()); 
-					
-					//stmt.setQueryTimeout(think_time_remaining);   // not implemented by postgres jdbc driver
-					
-					System.out.println("prefetching query " + next_partition.toSQL()); 
-					
-					start_time = System.currentTimeMillis(); 
-
-					/*
-					stmt.addBatch("SELECT set_config('statement_timeout', 5000, false)");
-					stmt.addBatch(next_partition.toSQL()); 
-					stmt.addBatch("RESET statement_timeout");
-					stmt.executeBatch(); 
-					 */
-					
-					/*
-					s = conn.prepareStatement("SELECT set_config('statement_timeout', ? , false);"); 
-					s.setInt(1, 5000); 
-					 */
-					 
-					
-					result = stmt.executeQuery("SELECT set_config('statement_timeout', 5000, false)"); 
-					result.next(); 
-					System.out.println("'statement_timeout' values is " + result.getString(1)); 
-					result.close(); 
-					stmt = null; 
-					
-					stmt = conn.createStatement(); 
 										
+					conn.setAutoCommit(false); 
 					
+					setStatementTimeout(5000); 
+										
+					start_time = System.currentTimeMillis();
 					result = stmt.executeQuery(next_partition.toSQL());
 					result.close(); 
-					//stmt.execute("RESET statement_timeout;"); 
-					
 					end_time = System.currentTimeMillis(); 
+
+					conn.setAutoCommit(true); 
+
+					
 	
 					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds"); 
 

@@ -569,7 +569,7 @@ public class SequenceExecuter
 			s = conn.createStatement(); 
 			
 			//rs = s.executeQuery("SELECT set_config('statement_timeout', 5000, false)"); 
-			s.executeQuery("SET statement_timeout TO 5000;"); 
+			s.execute("SET statement_timeout TO 5000;"); 
 			//rs.next(); 
 			//rs.close(); 
 			s = null; 

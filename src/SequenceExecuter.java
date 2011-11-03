@@ -591,7 +591,8 @@ public class SequenceExecuter
 		} 
 		catch (SQLException e) 
 		{
-			System.out.println("'statement_timeout' could not be set 2!");
+			System.out.println("ERROR setting STATEMENT_TIMEOUT: " + e.getMessage()); 
+			//System.out.println("'statement_timeout' could not be set 2!");
 		}
 	}
 	

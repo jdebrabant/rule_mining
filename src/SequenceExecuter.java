@@ -579,7 +579,7 @@ public class SequenceExecuter
 			} 
 			else 
 			{
-				System.out.println("'statement_timeout' could not be set!");
+				System.out.println("'statement_timeout' could not be set 1!");
 			}
 			
 			if ( rs != null )
@@ -591,7 +591,7 @@ public class SequenceExecuter
 		} 
 		catch (SQLException e) 
 		{
-			System.out.println("'statement_timeout' could not be set!");
+			System.out.println("'statement_timeout' could not be set 2!");
 		}
 	}
 	

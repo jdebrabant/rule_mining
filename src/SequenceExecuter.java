@@ -576,7 +576,7 @@ public class SequenceExecuter
 			s = conn.createStatement(); 
 			
 			//rs = s.executeQuery("SELECT set_config('statement_timeout', 5000, false)"); 
-			s.execute("SET statement_timeout TO 5000;"); 
+			s.execute("SET statement_timeout TO " + milliseconds + ";"); 
 			//rs.next(); 
 			//rs.close(); 
 			s = null; 
@@ -649,7 +649,7 @@ public class SequenceExecuter
 	
 					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds");
  					
-					break; 
+					//break; 
 				}
 				
 			}

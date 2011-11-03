@@ -563,16 +563,18 @@ public class SequenceExecuter
 	public void setStatementTimeout(int milliseconds)
 	{
 		Statement s = null;
-		ResultSet rs = null;
+		//ResultSet rs = null;
 		try 
 		{
 			s = conn.createStatement(); 
 			
 			//rs = s.executeQuery("SELECT set_config('statement_timeout', 5000, false)"); 
-			rs = s.executeQuery("SET statement_timeout TO 5000;"); 
-			rs.next(); 
-			rs.close(); 
+			s.executeQuery("SET statement_timeout TO 5000;"); 
+			//rs.next(); 
+			//rs.close(); 
 			s = null; 
+			
+			/*
 			if ( rs.next() ) 
 			{
 				System.out.println("'statement_timeout' values is " + rs.getString(1)); 
@@ -582,9 +584,12 @@ public class SequenceExecuter
 			{
 				System.out.println("'statement_timeout' could not be set 1!");
 			}
+			 
 			
 			if ( rs != null )
 				rs.close();
+			 
+			 */
 			
 			if ( s != null ) 
 				s.close();

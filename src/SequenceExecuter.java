@@ -614,6 +614,8 @@ public class SequenceExecuter
 						
 			try 
 			{		
+				conn.setAutoCommit(false); 
+				
 				System.out.println("...in prefetch thread...prefetching " + partitions_to_prefetch.size() + " partitions"); 
 				for(int i = 0; i < partitions_to_prefetch.size(); i++)
 				{
@@ -628,29 +630,30 @@ public class SequenceExecuter
 										
 					//getQueryCost(next_partition.toSQL()); 
 										
-					conn.setAutoCommit(false); 
 					setStatementTimeout(think_time_remaining); 
 										
 					start_time = System.currentTimeMillis();
 					
 					try 
 					{
-						stmt.executeQuery(next_partition.toSQL());
-						//result.close();
+						result = stmt.executeQuery(next_partition.toSQL());
+						result.close();
 					}
 					catch(Exception e)
 					{
 						System.out.println("prefetch timed out"); 
 					}
 					end_time = System.currentTimeMillis(); 
-					
-					setStatementTimeout(0); 
-					conn.setAutoCommit(true); 
+					 
 	
 					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds");
  					
 					//break; 
 				}
+				
+				System.out.println("...leaving prefetcher"); 
+				setStatementTimeout(0); 
+				conn.setAutoCommit(true);
 				
 			}
 			catch(Exception e)

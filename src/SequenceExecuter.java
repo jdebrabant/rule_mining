@@ -619,7 +619,9 @@ public class SequenceExecuter
 						
 			try 
 			{		
-				conn.setAutoCommit(false); 
+				conn.setAutoCommit(false);
+				
+				setStatementTimeout(think_time_remaining); 
 				
 				System.out.println("...in prefetch thread...prefetching " + partitions_to_prefetch.size() + " partitions"); 
 				for(int i = 0; i < partitions_to_prefetch.size(); i++)
@@ -634,8 +636,6 @@ public class SequenceExecuter
 					System.out.println("prefetching partition " + partitions_to_prefetch.get(i) + ": " + next_partition.toSQL()); 
 										
 					//getQueryCost(next_partition.toSQL()); 
-										
-					setStatementTimeout(think_time_remaining); 
 										
 					start_time = System.currentTimeMillis();
 					

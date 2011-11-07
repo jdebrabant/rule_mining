@@ -13,6 +13,7 @@ import java.sql.*;
 public class SequenceExecuter
 {
 	private final int MAX_RECURSION_DEPTH = 3; 
+	private final boolean PRINT_DEBUG_INFO = false; 
 	
 	private Connection conn; 
 		
@@ -82,7 +83,8 @@ public class SequenceExecuter
 			stmt = conn.createStatement(); 
 			
 			start_time = System.currentTimeMillis(); 
-			for(int i = 0; i < sql_queries.size(); i++)
+			//for(int i = 0; i < sql_queries.size(); i++)
+			for(int i = 0; i < 20; i++)
 			{
 				query_start_time = System.currentTimeMillis();
 				result = stmt.executeQuery(sql_queries.get(i)); 
@@ -128,7 +130,8 @@ public class SequenceExecuter
 			stmt = conn.createStatement(); 
 			
 			start_time = System.currentTimeMillis(); 
-			for(int i = 0; i < sql_queries.size(); i++)
+			//for(int i = 0; i < sql_queries.size(); i++)
+			for(int i = 0; i < 20; i++)
 			{
 				current_partitions = new LinkedList<Integer>(); 
 				predicted_partitions = new LinkedList< LinkedList<Integer> >(); 
@@ -140,12 +143,15 @@ public class SequenceExecuter
 				// predict next partitions based on current query
 				predictNextParititions(query_partitions.get(i), predicted_partitions, supports, 1);				
 				
-				System.out.print("Predictions for current query " + query_partitions.get(i) + ": "); 
-				for(int j = 0; j < predicted_partitions.size(); j++)
+				if(PRINT_DEBUG_INFO)
 				{
-					System.out.print(predicted_partitions.get(j) + ", " + supports.get(j)); 
+					System.out.print("Predictions for current query " + query_partitions.get(i) + ": "); 
+					for(int j = 0; j < predicted_partitions.size(); j++)
+					{
+						System.out.print(predicted_partitions.get(j) + ", " + supports.get(j)); 
+					}
+					System.out.println(); 
 				}
-				System.out.println(); 
 								
 				//rankPartitions(predicted_partitions); 
 				
@@ -242,8 +248,11 @@ public class SequenceExecuter
 					supports.add(new Double(rules.get(i).support)); 
 				}
 				
-				//System.out.println("current partition: " + current_partitions + ", rule added: " 
-				//				   + rules.get(i).lhs + " --> " + rules.get(i).rhs + ", " + rules.get(i).support); 
+				if(PRINT_DEBUG_INFO)
+				{
+					System.out.println("current partition: " + current_partitions + ", rule added: " 
+									   + rules.get(i).lhs + " --> " + rules.get(i).rhs + ", " + rules.get(i).support); 
+				}
 			}
 		}
 		

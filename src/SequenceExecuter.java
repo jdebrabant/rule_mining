@@ -84,7 +84,7 @@ public class SequenceExecuter
 			
 			start_time = System.currentTimeMillis(); 
 			//for(int i = 0; i < sql_queries.size(); i++)
-			for(int i = 0; i < 20; i++)
+			for(int i = 0; i < 4; i++)
 			{
 				query_start_time = System.currentTimeMillis();
 				result = stmt.executeQuery(sql_queries.get(i)); 
@@ -131,7 +131,7 @@ public class SequenceExecuter
 			
 			start_time = System.currentTimeMillis(); 
 			//for(int i = 0; i < sql_queries.size(); i++)
-			for(int i = 0; i < 20; i++)
+			for(int i = 0; i < 4; i++)
 			{
 				current_partitions = new LinkedList<Integer>(); 
 				predicted_partitions = new LinkedList< LinkedList<Integer> >(); 
@@ -659,7 +659,7 @@ public class SequenceExecuter
 					}
 					end_time = System.currentTimeMillis(); 
 					 
-	
+					
 					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds");
  					
 					//break; 

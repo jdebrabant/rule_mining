@@ -173,6 +173,9 @@ public class SequenceExecuter
 					thread.run(); 
 				}
 				
+				Thread.sleep(think_time_milli);
+				
+				/*
 				while(think_time_remaining > 0)
 				{
 					//Thread.sleep(think_time_milli);
@@ -182,6 +185,7 @@ public class SequenceExecuter
 				}
 				
 				think_time_expired = true; // stop prefetching
+				 */
 			}
 			end_time = System.currentTimeMillis(); 
 			

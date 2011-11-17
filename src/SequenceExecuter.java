@@ -662,7 +662,7 @@ public class SequenceExecuter
 					
 					System.out.println("prefetch took " + ((end_time-start_time)/1000.0) + " seconds");
  					
-					//break; 
+					break; 
 				}
 				
 				System.out.println("...leaving prefetcher"); 

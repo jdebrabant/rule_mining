@@ -37,7 +37,7 @@ public class SequenceExecuter
 		
 		partition_info = new HashMap<Integer, Partition>(); 
 		
-		think_time_milli = 30000; 
+		think_time_milli = 20000; 
 	}
 	
 	public static void main(String args[])

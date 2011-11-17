@@ -123,7 +123,7 @@ public class SequenceExecuter
 		
 		long query_start_time, query_end_time; 
 		
-		long prefetch_start_time, prefetch_end_time = 0; 
+		long prefetch_start_time = 0, prefetch_end_time = 0; 
 		
 		int row_count; 
 		

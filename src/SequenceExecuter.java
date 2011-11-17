@@ -628,9 +628,9 @@ public class SequenceExecuter
 						
 			try 
 			{		
-				conn.setAutoCommit(false);
+				//conn.setAutoCommit(false);
 				
-				setStatementTimeout(think_time_remaining); 
+				//setStatementTimeout(think_time_remaining); 
 				
 				System.out.println("...in prefetch thread...prefetching " + partitions_to_prefetch.size() + " partitions"); 
 				for(int i = 0; i < partitions_to_prefetch.size(); i++)

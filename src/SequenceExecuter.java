@@ -174,9 +174,14 @@ public class SequenceExecuter
 					prefetch_start_time = System.currentTimeMillis();
 
 					Partition next_partition = partition_info.get(new Integer(predicted_partitions.get(0).get(0))); 
+
 					
 					result = stmt.executeQuery(next_partition.toSQL());
 					result.close();
+					
+					
+					System.out.println("prefetched query: " + next_partition.toSQL()); 
+					System.out.println("actual next query: " sql_queries.get(i+1)); 
 					
 					prefetch_end_time = System.currentTimeMillis();
 

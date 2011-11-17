@@ -650,7 +650,7 @@ public class SequenceExecuter
 					
 					try 
 					{
-						//result = stmt.executeQuery(next_partition.toSQL());
+						result = stmt.executeQuery(next_partition.toSQL());
 						//result.close();
 					}
 					catch(Exception e)

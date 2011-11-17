@@ -186,7 +186,7 @@ public class SequenceExecuter
 					//thread.run(); 
 				}
 				
-				Thread.sleep(think_time_milli - (query_end_time - query_start_time));
+				Thread.sleep(think_time_milli - (prefetch_start_time - prefetch_end_time));
 				
 				/*
 				while(think_time_remaining > 0)

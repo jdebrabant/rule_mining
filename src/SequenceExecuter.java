@@ -180,7 +180,7 @@ public class SequenceExecuter
 					
 					prefetch_end_time = System.currentTimeMillis();
 
-
+					System.out.println("prefetch time: " + (prefetch_end_time - prefetch_start_time)); 
 					
 					//thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
 					//thread.run(); 

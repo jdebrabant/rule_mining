@@ -169,8 +169,14 @@ public class SequenceExecuter
 				// launch prefetch thread
 				if(predicted_partitions.size() > 0)
 				{
-					thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
-					thread.run(); 
+					Partition next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(0))); 
+					
+					result = stmt.executeQuery(next_partition.toSQL());
+					result.close();
+
+					
+					//thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
+					//thread.run(); 
 				}
 				
 				Thread.sleep(think_time_milli);

@@ -176,7 +176,8 @@ public class SequenceExecuter
 					Partition next_partition = partition_info.get(new Integer(predicted_partitions.get(0).get(0))); 
 
 					
-					result = stmt.executeQuery(next_partition.toSQL());
+					//result = stmt.executeQuery(next_partition.toSQL());
+					result = stmt.executeQuery(sql_queries.get(i+1));
 					result.close();
 					
 					

@@ -169,7 +169,7 @@ public class SequenceExecuter
 				// launch prefetch thread
 				if(predicted_partitions.size() > 0)
 				{
-					Partition next_partition = partition_info.get(new Integer(partitions_to_prefetch.get(0))); 
+					Partition next_partition = partition_info.get(new Integer(predicted_partitions.get(0))); 
 					
 					result = stmt.executeQuery(next_partition.toSQL());
 					result.close();

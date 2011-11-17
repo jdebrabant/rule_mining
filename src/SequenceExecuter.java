@@ -181,7 +181,7 @@ public class SequenceExecuter
 					
 					
 					System.out.println("prefetched query: " + next_partition.toSQL()); 
-					System.out.println("actual next query: " sql_queries.get(i+1)); 
+					System.out.println("actual next query: " + sql_queries.get(i+1)); 
 					
 					prefetch_end_time = System.currentTimeMillis();
 

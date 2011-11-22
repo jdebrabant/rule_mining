@@ -125,6 +125,8 @@ public class SequenceExecuter
 		
 		long prefetch_start_time = 0, prefetch_end_time = 0; 
 		
+		long total_think_time; 
+		
 		int row_count; 
 		
 		try 
@@ -209,7 +211,10 @@ public class SequenceExecuter
 			}
 			end_time = System.currentTimeMillis(); 
 			
+			total_think_time = (sql_queries.size()-1) * think_time_milli; 
+			
 			System.out.println("total execution time: " + ((end_time - start_time)/1000.0)); 
+			System.out.println("nomalized execution time: " + ((end_time-start_time-total_think_time)/1000.0)); 
 		}
 		catch(Exception e)
 		{

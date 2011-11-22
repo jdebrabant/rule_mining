@@ -177,7 +177,8 @@ public class SequenceExecuter
 				think_time_remaining = think_time_milli; 
 				
 				
-				
+				if(i != sql_queries.size()-1)
+				{
 				prefetch_start_time = System.currentTimeMillis();
 				
 				//result = stmt.executeQuery(next_partition.toSQL());
@@ -187,6 +188,7 @@ public class SequenceExecuter
 				prefetch_end_time = System.currentTimeMillis();
 				
 				System.out.println("prefetch time: " + (prefetch_end_time - prefetch_start_time)); 
+				}
 				
 				/*
 				// launch prefetch thread

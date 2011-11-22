@@ -173,7 +173,7 @@ public class SequenceGenerator
 			
             // run each task 1000 times
             task_simulator.runTask1(); 
-            //task_simulator.runTask2(); 
+            task_simulator.runTask2(); 
             //task_simulator.runTask3(); 
 
             task_simulator.finishTasks();
@@ -208,13 +208,13 @@ public class SequenceGenerator
 			partition_info_out = new FileWriter("../data/partition_info.txt"); 
 			
 			partition_out_1 = new FileWriter("../data/partition1.txt"); 
-			//partition_out_2 = new FileWriter("data/partition2.txt"); 
+			partition_out_2 = new FileWriter("../data/partition2.txt"); 
 			//partition_out_3 = new FileWriter("data/partition3.txt"); 
 			
 			rule_miner_input_1 = new FileWriter("../data/miner1.txt"); 
 			
 			query_out_1 = new FileWriter("../data/sql1.txt");
-			//query_out_2 = new FileWriter("data/sql2.txt");
+			query_out_2 = new FileWriter("../data/sql2.txt");
 			//query_out_3 = new FileWriter("data/sql3.txt");
 			
 			createPartitions(); 
@@ -287,7 +287,7 @@ public class SequenceGenerator
 						query_out_1.write(box.convertToSQL()); 
 						break;
 					case 2:
-						partition_out_2.write(box.checkPartitions());
+						partition_out_2.write(box.checkPartitions() + "\n");
 						query_out_2.write(box.convertToSQL()); 
 						break;
 					case 3:
@@ -352,8 +352,8 @@ public class SequenceGenerator
     {
         LinkedList<QueryBox> boxList = new LinkedList <QueryBox>();
 		
-		for(int i = 0; i < 25; i++)
-		{
+		//for(int i = 0; i < 25; i++)
+		//{
 			QueryBox box1 = new QueryBox(35000, 5000, 30, 10); // approximately 5% selectivity 
 			QueryBox box2 = new QueryBox(40000, 5000, 40, 10); // approximately 5% selectivity 
 			QueryBox box3 = new QueryBox(45000, 5000, 50, 10); // approximately 5% selectivity 
@@ -363,7 +363,7 @@ public class SequenceGenerator
 			boxList.add(box2);
 			boxList.add(box3);
 			boxList.add(box4);
-		}
+		//}
 		
         writer(boxList, 1);
     }
@@ -381,12 +381,19 @@ public class SequenceGenerator
         QueryBox box6 = new QueryBox(63000, 9000, 100, 100); //5:30 PM to 8PM
 		 */
 		
-		QueryBox box1 = new QueryBox(18000, 9000, 100, 100); 
-        QueryBox box2 = new QueryBox(19000, 9000, 100, 100); 
-        QueryBox box3 = new QueryBox(20000, 9000, 100, 100); 
-        QueryBox box4 = new QueryBox(21000, 9000, 100, 100); 
-        QueryBox box5 = new QueryBox(22000, 9000, 100, 100); 
-        QueryBox box6 = new QueryBox(23000, 9000, 100, 100); 
+		QueryBox box1 = new QueryBox(25000, 3000, 100, 10); 
+        QueryBox box2 = new QueryBox(29000, 3000, 100, 10); 
+        QueryBox box3 = new QueryBox(33000, 3000, 100, 10); 
+        QueryBox box4 = new QueryBox(37000, 3000, 100, 10); 
+        QueryBox box5 = new QueryBox(41000, 3000, 100, 10); 
+        QueryBox box6 = new QueryBox(45000, 3000, 100, 10); 
+		
+		QueryBox box7 = new QueryBox(25000, 3000, 50, 10); 
+        QueryBox box8 = new QueryBox(29000, 3000, 50, 10); 
+        QueryBox box9 = new QueryBox(33000, 3000, 50, 10); 
+        QueryBox box10 = new QueryBox(37000, 3000, 50, 10); 
+        QueryBox box11 = new QueryBox(41000, 3000, 50, 10); 
+        QueryBox box12 = new QueryBox(45000, 3000, 50, 10); 
 		
         boxList.add(box1);
         boxList.add(box2);
@@ -394,6 +401,12 @@ public class SequenceGenerator
         boxList.add(box4);
         boxList.add(box5);
         boxList.add(box6);
+		boxList.add(box7);
+        boxList.add(box8);
+        boxList.add(box9);
+        boxList.add(box10);
+        boxList.add(box11);
+        boxList.add(box12);
 
         writer(boxList, 2);
 
@@ -557,7 +570,8 @@ public class SequenceGenerator
         try
         {
              
-            //partition_out_2.close(); 
+            partition_out_2.close(); 
+			query_out_2.close(); 
             //partition_out_3.close();
 			
 			partition_out_1.close();

@@ -67,7 +67,9 @@ public class SequenceExecuter
 		{
 			
 			executer.runSimulationNaive(); 
-		}
+		}  
+		
+		
 	}
 	
 	public void runSimulationNaive()

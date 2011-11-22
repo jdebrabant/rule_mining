@@ -102,7 +102,7 @@ public class SequenceExecuter
 			total_think_time = (sql_queries.size()-1) * think_time_milli; 
 			
 			System.out.println("total execution time: " + ((end_time - start_time)/1000.0)); 
-			System.out.println("nomalized execution time: " + ((end_time-start_time-total_think_time)/1000.0)); 
+			System.out.println("nomalized execution time: " + ((end_time-start_time-think_time_milli)/1000.0)); 
 
 		}
 		catch(Exception e)

@@ -37,7 +37,7 @@ public class SequenceExecuter
 		
 		partition_info = new HashMap<Integer, Partition>(); 
 		
-		think_time_milli = 30000; 
+		think_time_milli = 10000; 
 	}
 	
 	public static void main(String args[])
@@ -95,14 +95,17 @@ public class SequenceExecuter
 				
 				System.out.println("query " + i + " runtime: " + ((query_end_time - query_start_time)/1000.0) + " seconds"); 
 				
+				if(1 == sql_queries.size()-1)
+					break; 
+				
 				Thread.sleep(think_time_milli); 
 			}
 			end_time = System.currentTimeMillis(); 
 			
-			total_think_time = (sql_queries.size()-1) * think_time_milli; 
+			total_think_time = (sql_queries.size()) * think_time_milli; 
 			
 			System.out.println("total execution time: " + ((end_time - start_time)/1000.0)); 
-			System.out.println("nomalized execution time: " + ((end_time-start_time-think_time_milli)/1000.0)); 
+			System.out.println("nomalized execution time: " + ((end_time-start_time-total_think_time)/1000.0)); 
 
 		}
 		catch(Exception e)
@@ -179,16 +182,21 @@ public class SequenceExecuter
 				
 				if(i != sql_queries.size()-1)
 				{
-				prefetch_start_time = System.currentTimeMillis();
-				
-				//result = stmt.executeQuery(next_partition.toSQL());
-				result = stmt.executeQuery(sql_queries.get(i+1));
-				result.close();
-				
-				prefetch_end_time = System.currentTimeMillis();
-				
-				System.out.println("prefetch time: " + (prefetch_end_time - prefetch_start_time)); 
+					prefetch_start_time = System.currentTimeMillis();
+					
+					//result = stmt.executeQuery(next_partition.toSQL());
+					result = stmt.executeQuery(sql_queries.get(i+1));
+					result.close();
+					
+					prefetch_end_time = System.currentTimeMillis();
+					
+					System.out.println("prefetch time: " + (prefetch_end_time - prefetch_start_time)); 
 				}
+				else 
+				{
+					break; 
+				}
+
 				
 				/*
 				// launch prefetch thread

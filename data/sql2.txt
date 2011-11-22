@@ -1,0 +1,12 @@
+SELECT * FROM quote WHERE quote_time > 25000 AND quote_time < 28000 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 29000 AND quote_time < 32000 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 33000 AND quote_time < 36000 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 37000 AND quote_time < 40000 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 41000 AND quote_time < 44000 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 45000 AND quote_time < 48000 AND offer_price > 100.0 AND offer_price < 110.0
+SELECT * FROM quote WHERE quote_time > 25000 AND quote_time < 28000 AND offer_price > 50.0 AND offer_price < 60.0
+SELECT * FROM quote WHERE quote_time > 29000 AND quote_time < 32000 AND offer_price > 50.0 AND offer_price < 60.0
+SELECT * FROM quote WHERE quote_time > 33000 AND quote_time < 36000 AND offer_price > 50.0 AND offer_price < 60.0
+SELECT * FROM quote WHERE quote_time > 37000 AND quote_time < 40000 AND offer_price > 50.0 AND offer_price < 60.0
+SELECT * FROM quote WHERE quote_time > 41000 AND quote_time < 44000 AND offer_price > 50.0 AND offer_price < 60.0
+SELECT * FROM quote WHERE quote_time > 45000 AND quote_time < 48000 AND offer_price > 50.0 AND offer_price < 60.0

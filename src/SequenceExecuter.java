@@ -176,9 +176,22 @@ public class SequenceExecuter
 				think_time_expired = false; 
 				think_time_remaining = think_time_milli; 
 				
+				
+				
+				prefetch_start_time = System.currentTimeMillis();
+				
+				//result = stmt.executeQuery(next_partition.toSQL());
+				result = stmt.executeQuery(sql_queries.get(i+1));
+				result.close();
+				
+				prefetch_end_time = System.currentTimeMillis();
+				
+				System.out.println("prefetch time: " + (prefetch_end_time - prefetch_start_time)); 
+				
+				/*
 				// launch prefetch thread
-				//if(predicted_partitions.size() > 0)
-				//{
+				if(predicted_partitions.size() > 0)
+				{
 					prefetch_start_time = System.currentTimeMillis();
 
 					Partition next_partition = partition_info.get(new Integer(predicted_partitions.get(0).get(0))); 
@@ -198,7 +211,8 @@ public class SequenceExecuter
 					
 					//thread = new PrefetchThread(predicted_partitions.get(0)); // prefetch the first predicted sequence only (for testing)
 					//thread.run(); 
-				//}
+				}
+				 */
 				
 				if(prefetch_end_time - prefetch_start_time < think_time_milli)
 					Thread.sleep(think_time_milli - (prefetch_end_time - prefetch_start_time));
